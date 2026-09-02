@@ -1,11 +1,13 @@
 /* =========================================================
    Fundo de circuitos
    -----------------------------------------------------------
+   Traços de placa gerados a partir de uma grade, com os cantos
+   cortados em 45°, vias nas pontas e alguns chips.
+
    Camadas, do fundo para a frente:
 
-     grid   hexágonos esparsos, como as barreiras do mundo digital
-     rings  anéis com marcações, girando bem devagar
-     base   traços da placa, vias, chips e blocos de dados
+     base   os traços, vias e chips, sempre visíveis e fracos
+     lit    vias e chips que acendem e apagam parados
      pulse  as luzes que percorrem os traços
 
    As luzes são feitas com stroke-dasharray: um traço curto e um
@@ -27,9 +29,9 @@
   var NS = 'http://www.w3.org/2000/svg';
   var SEED = 20260902;
 
-  /* Quantas luzes correm ao mesmo tempo. O resto dos traços fica
-     como circuitaria parada: dá densidade sem custo de animação. */
-  var MAX_PULSES = 18;
+  /* Teto de luzes simultâneas. O resto dos traços fica como
+     circuitaria parada: dá densidade sem custo de animação. */
+  var MAX_PULSES = 14;
 
   /* ---------------------------------------------------------
      Utilidades
@@ -70,22 +72,12 @@
     return d + 'L' + last[0] + ' ' + last[1];
   }
 
-  function hexPath(cx, cy, r) {
-    var d = '';
-    for (var i = 0; i < 6; i++) {
-      var ang = (Math.PI / 180) * (60 * i - 30);
-      var x = Math.round(cx + r * Math.cos(ang));
-      var y = Math.round(cy + r * Math.sin(ang));
-      d += (i ? 'L' : 'M') + x + ' ' + y;
-    }
-    return d + 'Z';
-  }
-
   /* ---------------------------------------------------------
      Geração
      --------------------------------------------------------- */
 
-  /* Caminha pela grade virando 90° a cada trecho. */
+  /* Caminha pela grade virando 90° a cada trecho, partindo de
+     onde o chamador mandar. */
   function walk(rand, cols, rows, grid, startCol, startRow) {
     var x = startCol;
     var y = startRow;
@@ -93,7 +85,7 @@
     var sign = rand() < 0.5 ? 1 : -1;
 
     var pts = [[x * grid, y * grid]];
-    var steps = 3 + Math.floor(rand() * 3);
+    var steps = 2 + Math.floor(rand() * 3);
 
     for (var i = 0; i < steps; i++) {
       var len = 1 + Math.floor(rand() * 3);
@@ -116,10 +108,10 @@
     if (!w || !h) return;
 
     var rand = makeRandom(SEED);
-    var grid = w < 620 ? 42 : 56;
+    var grid = w < 620 ? 46 : 62;
     var cols = Math.max(4, Math.round(w / grid));
     var rows = Math.max(4, Math.round(h / grid));
-    var total = Math.min(46, Math.max(18, Math.round(cols * rows / 4.5)));
+    var total = Math.min(28, Math.max(12, Math.round(cols * rows / 7)));
 
     var svg = el('svg', {
       viewBox: '0 0 ' + w + ' ' + h,
@@ -156,86 +148,21 @@
     defs.appendChild(halo);
     svg.appendChild(defs);
 
-    var gGrid  = el('g', { class: 'circuit__grid' });
-    var gRings = el('g', { class: 'circuit__rings' });
     var gBase  = el('g', { class: 'circuit__base' });
     var gLit   = el('g', { class: 'circuit__lit' });
     var gPulse = el('g', { class: 'circuit__pulse' });
-    svg.appendChild(gGrid);
-    svg.appendChild(gRings);
     svg.appendChild(gBase);
     svg.appendChild(gLit);
     svg.appendChild(gPulse);
 
-    /* Elementos que respiram (vias, chips, hexágonos): acendem e
-       apagam parados, cada um no seu tempo. */
+    /* Vias e chips respiram parados, cada um no seu tempo. */
     function breathe(node, minDur, spanDur) {
       var dur = minDur + rand() * spanDur;
       node.style.setProperty('--dur', dur.toFixed(2) + 's');
       node.style.setProperty('--delay', (-rand() * dur).toFixed(2) + 's');
-      node.style.setProperty('--peak', (0.22 + rand() * 0.26).toFixed(2));
+      node.style.setProperty('--peak', (0.22 + rand() * 0.28).toFixed(2));
       return node;
     }
-
-    var i, j, pts, d;
-
-    /* ---- hexágonos: manchas soltas, não papel de parede ---- */
-    var patches = w < 620 ? 3 : 5;
-    for (i = 0; i < patches; i++) {
-      var hr = grid * (0.5 + rand() * 0.3);
-      var hx = rand() * w;
-      var hy = rand() * h;
-      var cells = 3 + Math.floor(rand() * 5);
-
-      /* j = 0 é o centro da flor; os demais são a coroa em volta */
-      for (j = 0; j < cells; j++) {
-        var shell = j === 0 ? 0 : 1;
-        var ang = (Math.PI / 3) * (j - 1);
-        var cx = hx + (shell ? Math.cos(ang) * hr * Math.sqrt(3) : 0);
-        var cy = hy + (shell ? Math.sin(ang) * hr * Math.sqrt(3) : 0);
-        gGrid.appendChild(el('path', { d: hexPath(cx, cy, hr) }));
-
-        /* uma célula por mancha acende */
-        if (j === 1 + Math.floor(rand() * 3)) {
-          gLit.appendChild(breathe(el('path', { d: hexPath(cx, cy, hr) }), 7, 9));
-        }
-      }
-    }
-
-    /* ---- anéis com marcações, girando devagar ---- */
-    var ringCount = w < 620 ? 2 : 3;
-    for (i = 0; i < ringCount; i++) {
-      var rr = grid * (1.6 + rand() * 1.4);
-      var rx = Math.round(rand() * w);
-      var ry = Math.round(rand() * h);
-
-      var ring = el('g', {});
-      ring.appendChild(el('circle', { cx: rx, cy: ry, r: Math.round(rr) }));
-      ring.appendChild(el('circle', { cx: rx, cy: ry, r: Math.round(rr * 0.72) }));
-
-      var ticks = 12 + Math.floor(rand() * 8);
-      for (j = 0; j < ticks; j++) {
-        var a = (Math.PI * 2 * j) / ticks;
-        var long = j % 3 === 0;
-        var r1 = rr * (long ? 0.78 : 0.86);
-        var r2 = rr * 0.98;
-        ring.appendChild(el('path', {
-          d: 'M' + Math.round(rx + Math.cos(a) * r1) + ' ' + Math.round(ry + Math.sin(a) * r1) +
-             'L' + Math.round(rx + Math.cos(a) * r2) + ' ' + Math.round(ry + Math.sin(a) * r2)
-        }));
-      }
-
-      /* Giro muito lento, com o sentido alternando entre os anéis.
-         O sentido vai em animation-direction: duração negativa é
-         inválida e o anel simplesmente não anima. */
-      var spin = 90 + rand() * 90;
-      ring.style.setProperty('--spin', spin.toFixed(0) + 's');
-      ring.style.animationDirection = i % 2 ? 'reverse' : 'normal';
-      ring.style.transformOrigin = rx + 'px ' + ry + 'px';
-      gRings.appendChild(ring);
-    }
-
-    /* ---- traços ---- */
 
     /* Os inícios são sorteados dentro de faixas, um por faixa, em vez
        de soltos pela tela: sorteio puro deixava cantos inteiros vazios. */
@@ -245,6 +172,9 @@
     var pulseEvery = Math.max(1, Math.round(total / MAX_PULSES));
     var pulses = [];
 
+    var i, j, pts, d;
+
+    /* ---- traços ---- */
     for (i = 0; i < total; i++) {
       var bx = i % bandsX;
       var by = Math.floor(i / bandsX) % bandsY;
@@ -261,20 +191,9 @@
       [pts[0], pts[pts.length - 1]].forEach(function (p) {
         gBase.appendChild(el('circle', { cx: p[0], cy: p[1], r: 3.2 }));
         gLit.appendChild(breathe(el('circle', {
-          cx: p[0], cy: p[1], r: grid * 0.24, fill: 'url(#circuitHalo)', stroke: 'none'
+          cx: p[0], cy: p[1], r: grid * 0.22, fill: 'url(#circuitHalo)', stroke: 'none'
         }), 5, 7));
       });
-
-      /* blocos de dados em alguns trechos */
-      if (rand() < 0.35 && pts.length > 2) {
-        var mid = pts[1];
-        for (j = 0; j < 3; j++) {
-          gBase.appendChild(el('rect', {
-            x: Math.round(mid[0] + 6 + j * 7), y: Math.round(mid[1] - 3),
-            width: 4, height: 6, rx: 1
-          }));
-        }
-      }
 
       /* só uma parte dos traços recebe luz */
       if (i % pulseEvery === 0 && pulses.length < MAX_PULSES) {
@@ -287,28 +206,29 @@
     }
 
     /* ---- chips ---- */
-    var chips = w < 620 ? 3 : 5;
+    var chips = w < 620 ? 2 : 4;
     for (i = 0; i < chips; i++) {
       var cw = grid * (1.6 + rand());
       var ch = grid * (1.1 + rand() * 0.7);
-      var chx = Math.round(rand() * Math.max(1, w - cw));
-      var chy = Math.round(rand() * Math.max(1, h - ch));
+      var cx = Math.round(rand() * Math.max(1, w - cw));
+      var cy = Math.round(rand() * Math.max(1, h - ch));
 
       gBase.appendChild(el('rect', {
-        x: chx, y: chy, width: Math.round(cw), height: Math.round(ch), rx: 5
+        x: cx, y: cy, width: Math.round(cw), height: Math.round(ch), rx: 5
       }));
 
+      /* pinos nos dois lados */
       var pins = 3;
       for (j = 1; j <= pins; j++) {
-        var py = Math.round(chy + (ch * j) / (pins + 1));
-        gBase.appendChild(el('path', { d: 'M' + Math.round(chx - grid * 0.35) + ' ' + py + 'H' + chx }));
+        var py = Math.round(cy + (ch * j) / (pins + 1));
+        gBase.appendChild(el('path', { d: 'M' + Math.round(cx - grid * 0.35) + ' ' + py + 'H' + cx }));
         gBase.appendChild(el('path', {
-          d: 'M' + Math.round(chx + cw) + ' ' + py + 'H' + Math.round(chx + cw + grid * 0.35)
+          d: 'M' + Math.round(cx + cw) + ' ' + py + 'H' + Math.round(cx + cw + grid * 0.35)
         }));
       }
 
       gLit.appendChild(breathe(el('rect', {
-        x: chx, y: chy, width: Math.round(cw), height: Math.round(ch), rx: 5, fill: 'none'
+        x: cx, y: cy, width: Math.round(cw), height: Math.round(ch), rx: 5, fill: 'none'
       }), 7, 9));
     }
 
@@ -316,7 +236,7 @@
 
     /* ---- tempos das luzes ----
        Só agora, com o svg no documento, dá para medir o caminho.
-       velocidade fixa -> a luz anda igual em traço curto e longo. */
+       Velocidade fixa -> a luz anda igual em traço curto e longo. */
     pulses.forEach(function (p) {
       var len = p.core.getTotalLength();
       if (!len) return;

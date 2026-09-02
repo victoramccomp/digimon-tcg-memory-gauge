@@ -27,10 +27,8 @@ Gerado em [`js/circuit.js`](js/circuit.js) a partir de uma grade, em camadas:
 
 | Camada | O que é |
 |---|---|
-| `grid` | manchas de hexágonos, como as barreiras do mundo digital |
-| `rings` | anéis com marcações, girando devagar em sentidos opostos |
-| `base` | traços da placa com cantos em 45°, vias, chips e blocos de dados |
-| `lit` | vias, chips e hexágonos que acendem e apagam parados |
+| `base` | traços da placa com cantos em 45°, vias nas pontas e chips |
+| `lit` | vias e chips que acendem e apagam parados |
 | `pulse` | as luzes que percorrem os traços |
 
 ### As luzes
@@ -40,14 +38,15 @@ então existe uma luz por vez e ela some entre uma passagem e outra. A duração
 sai da **velocidade**, não do comprimento — senão traço longo teria luz rápida
 e traço curto luz lenta.
 
-Medido: 18 traços com luz, **5,8 visíveis ao mesmo tempo** em média, a 78–148
-px/s, cada luz ocupando 10–28% do traço em que corre.
+Medido: 14 traços com luz, **4,2 visíveis ao mesmo tempo** em média, a 70–150
+px/s, cada luz ocupando cerca de 10–28% do traço em que corre.
 
 ### Custo e acessibilidade
 
 - **Semente fixa**: o desenho é sempre o mesmo em cada tamanho de tela.
-- Só `stroke-dashoffset`, opacidade e rotação são animados — nada de blur ou
-  filtro, que pesariam numa partida longa de celular.
+- Só `stroke-dashoffset` e opacidade são animados — nada de blur ou filtro,
+  que pesariam numa partida longa de celular. São 129 elementos, dos quais
+  64 animados.
 - Redesenha ao girar a tela, via `ResizeObserver` com os eventos de janela e
   `visibilitychange` como reforço.
 - Respeita `prefers-reduced-motion`: as luzes somem, os anéis param e os
