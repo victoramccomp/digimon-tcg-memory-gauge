@@ -79,6 +79,28 @@ button{ cursor: pointer; touch-action: manipulation; }
 }
 .circuit svg{ display: block; width: 100%; height: 100%; }
 
+/* hexágonos: as manchas mais ao fundo */
+.circuit__grid{
+  fill: none;
+  stroke: url(#circuitGrad);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  opacity: .07;
+}
+
+/* anéis com marcações, girando muito devagar */
+.circuit__rings{
+  fill: none;
+  stroke: url(#circuitGrad);
+  stroke-width: 1;
+  opacity: .06;
+}
+.circuit__rings > g{
+  transform-box: view-box;
+  animation: circuit-spin var(--spin, 120s) linear infinite;
+}
+@keyframes circuit-spin{ to{ transform: rotate(360deg); } }
+
 /* camada apagada: a textura da placa, sempre visível */
 .circuit__base{
   fill: none;
@@ -88,9 +110,10 @@ button{ cursor: pointer; touch-action: manipulation; }
   stroke-linejoin: round;
   opacity: .085;
 }
-.circuit__base circle{ fill: url(#circuitGrad); stroke: none; }
+.circuit__base circle,
+.circuit__base rect{ fill: url(#circuitGrad); stroke: none; }
 
-/* camada acesa: mesma geometria, acendendo em tempos próprios */
+/* vias, chips e hexágonos que respiram parados */
 .circuit__lit > *{
   fill: none;
   stroke: url(#circuitGrad);
@@ -101,12 +124,45 @@ button{ cursor: pointer; touch-action: manipulation; }
   animation: circuit-glow var(--dur, 9s) ease-in-out var(--delay, 0s) infinite;
 }
 
-/* A maior parte do ciclo fica apagada: o traço acende, segura um
+/* A maior parte do ciclo fica apagada: o elemento acende, segura um
    instante e volta a sumir. Se a janela acesa for larga, quase tudo
    fica brilhando junto e o fundo deixa de "acender aos poucos". */
 @keyframes circuit-glow{
   0%,  58%, 100%{ opacity: 0; }
   72%, 82%      { opacity: var(--peak, .35); }
+}
+
+/* =========================================================
+   As luzes que percorrem os traços
+   ---------------------------------------------------------
+   Um traço curto de dash, com o vão maior que o caminho, então
+   existe uma luz só por vez e ela some entre as passagens.
+   `linear` porque a luz tem que andar em velocidade constante.
+   ========================================================= */
+
+.circuit__pulse > *{
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--dash, 40px) var(--gap, 600px);
+  animation: circuit-run var(--dur, 8s) linear var(--delay, 0s) infinite;
+}
+
+/* o núcleo claro é a luz; o halo largo e fraco é o brilho ao redor */
+.circuit__pulse-core{
+  stroke: url(#circuitLight);
+  stroke-width: 1.9;
+  opacity: .85;
+}
+.circuit__pulse-halo{
+  stroke: url(#circuitLight);
+  stroke-width: 6;
+  opacity: .14;
+}
+
+@keyframes circuit-run{
+  from{ stroke-dashoffset: var(--from, 600px); }
+  to  { stroke-dashoffset: var(--to, 0px); }
 }
 
 body.no-circuit .circuit{ display: none; }
@@ -748,6 +804,10 @@ kbd{
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: .01ms !important; transition-duration: .01ms !important; }
 
-  /* sem o pulsar, os traços ficam acesos de leve e parados */
+  /* sem o pulsar, os traços ficam acesos de leve e parados, e as
+     luzes somem: uma luz correndo é exatamente o tipo de movimento
+     que quem pede movimento reduzido não quer ver. */
   .circuit__lit > *{ animation: none; opacity: .16; }
+  .circuit__rings > g{ animation: none; }
+  .circuit__pulse{ display: none; }
 }

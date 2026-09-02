@@ -23,26 +23,40 @@ fica girado 180°, e a régua de -10 a 10 no meio mostra de quem é o contador.
 
 ## Fundo de circuitos
 
-Traços de placa gerados em [`js/circuit.js`](js/circuit.js) a partir de uma
-grade, com os cantos cortados em 45°, vias nas pontas e alguns chips. Cada
-elemento acende e apaga no seu próprio tempo, então o fundo respira sem
-chamar atenção.
+Gerado em [`js/circuit.js`](js/circuit.js) a partir de uma grade, em camadas:
+
+| Camada | O que é |
+|---|---|
+| `grid` | manchas de hexágonos, como as barreiras do mundo digital |
+| `rings` | anéis com marcações, girando devagar em sentidos opostos |
+| `base` | traços da placa com cantos em 45°, vias, chips e blocos de dados |
+| `lit` | vias, chips e hexágonos que acendem e apagam parados |
+| `pulse` | as luzes que percorrem os traços |
+
+### As luzes
+
+Feitas com `stroke-dasharray`: um traço curto e um vão maior que o caminho,
+então existe uma luz por vez e ela some entre uma passagem e outra. A duração
+sai da **velocidade**, não do comprimento — senão traço longo teria luz rápida
+e traço curto luz lenta.
+
+Medido: 18 traços com luz, **5,8 visíveis ao mesmo tempo** em média, a 78–148
+px/s, cada luz ocupando 10–28% do traço em que corre.
+
+### Custo e acessibilidade
 
 - **Semente fixa**: o desenho é sempre o mesmo em cada tamanho de tela.
-- **Gradiente vertical** laranja em cima, ciano embaixo, acompanhando as
-  cores dos dois jogadores.
-- **Só opacidade é animada** — nada de blur ou filtro, que pesariam numa
-  partida longa de celular.
-- **Cerca de um terço aceso por vez** (medido: média de 34%, variando entre
-  23% e 49%). Janela estreita de brilho é o que faz parecer que acende aos
-  poucos, em vez de um fundo permanentemente iluminado.
+- Só `stroke-dashoffset`, opacidade e rotação são animados — nada de blur ou
+  filtro, que pesariam numa partida longa de celular.
 - Redesenha ao girar a tela, via `ResizeObserver` com os eventos de janela e
   `visibilitychange` como reforço.
-- Respeita `prefers-reduced-motion`: os traços ficam acesos de leve e parados.
+- Respeita `prefers-reduced-motion`: as luzes somem, os anéis param e os
+  traços ficam acesos de leve.
 - Pode ser desligado nos Ajustes, para economizar bateria.
 
-Os painéis têm base escura própria (`rgba(11,16,25,.66)`) para que os traços
-passem por trás sem disputar contraste com os números.
+Os painéis têm base escura própria (`rgba(11,16,25,.66)`) para que o fundo
+passe por trás sem disputar contraste: no pico, uma luz chega ao conteúdo a
+0,22 de opacidade.
 
 ## Layout em paisagem no celular
 
