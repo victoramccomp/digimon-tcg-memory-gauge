@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Memory Gauge — Contador para Digimon TCG</title>
+<meta name="description" content="Contador de memória (Memory Gauge) para o Digimon Card Game. Funciona offline, com a régua de 10 a 10, troca automática de turno e a regra do mínimo de 3.">
+<meta name="theme-color" content="#0b0f17">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Memory Gauge">
+<meta property="og:title" content="Memory Gauge — Contador para Digimon TCG">
+<meta property="og:description" content="Contador de memória compartilhada para partidas de Digimon Card Game.">
+<meta property="og:type" content="website">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon.svg">
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+<div class="app">
+  <main class="board">
+
+    <!-- ===================== JOGADOR 2 (topo) ===================== -->
+    <section class="player player--b" data-player="b">
+      <div class="player__inner">
+        <div class="player__head">
+          <button class="player__name" type="button" data-act="rename" id="nameB">Jogador 2</button>
+          <span class="player__badge">sua vez</span>
+        </div>
+
+        <div class="player__mem">
+          <button class="round round--pay" type="button" data-act="pay" data-player="b" data-n="1" aria-label="Jogador 2 paga 1 de memória">&minus;</button>
+          <div class="mem">
+            <span class="mem__num" id="memB">3</span>
+            <span class="mem__lbl">memória</span>
+          </div>
+          <button class="round round--gain" type="button" data-act="gain" data-player="b" data-n="1" aria-label="Jogador 2 ganha 1 de memória">+</button>
+        </div>
+
+        <div class="pad" data-pad="b" aria-label="Pagar custo"></div>
+
+        <button class="endturn" type="button" data-act="end" data-player="b">Encerrar turno</button>
+      </div>
+    </section>
+
+    <!-- ===================== CENTRO ===================== -->
+    <section class="center">
+      <div class="centerbar">
+        <button class="tool tool--icon" type="button" data-act="menu" title="Menu (M)" aria-label="Abrir menu" aria-haspopup="dialog">&#9776;</button>
+
+        <div class="turn" id="turnBox">
+          <span class="turn__kicker">Turno de</span>
+          <strong class="turn__name" id="turnName">Jogador 1</strong>
+          <span class="turn__meta" id="turnMeta">turno 1 &middot; 0 de memória</span>
+        </div>
+
+        <button class="tool tool--icon" type="button" data-act="undo" id="btnUndo" title="Desfazer (Z)" aria-label="Desfazer">&#8630;</button>
+
+        <!-- em paisagem o aviso ancora aqui, sobre a faixa de turno -->
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge__ends">
+          <span class="gauge__end gauge__end--a" id="endA">Jogador 1</span>
+          <span class="gauge__end gauge__end--b" id="endB">Jogador 2</span>
+        </div>
+        <div class="gauge__track" id="track" role="group" aria-label="Régua de memória">
+          <div class="puck" id="puck" aria-hidden="true"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== JOGADOR 1 (base) ===================== -->
+    <section class="player player--a" data-player="a">
+      <div class="player__inner">
+        <div class="player__head">
+          <button class="player__name" type="button" data-act="rename" id="nameA">Jogador 1</button>
+          <span class="player__badge">sua vez</span>
+        </div>
+
+        <div class="player__mem">
+          <button class="round round--pay" type="button" data-act="pay" data-player="a" data-n="1" aria-label="Jogador 1 paga 1 de memória">&minus;</button>
+          <div class="mem">
+            <span class="mem__num" id="memA">3</span>
+            <span class="mem__lbl">memória</span>
+          </div>
+          <button class="round round--gain" type="button" data-act="gain" data-player="a" data-n="1" aria-label="Jogador 1 ganha 1 de memória">+</button>
+        </div>
+
+        <div class="pad" data-pad="a" aria-label="Pagar custo"></div>
+
+        <button class="endturn" type="button" data-act="end" data-player="a">Encerrar turno</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===================== MENU ===================== -->
+<dialog class="sheet sheet--menu" id="dlgMenu">
+  <div class="sheet__in">
+    <h2 class="sheet__title">Menu</h2>
+    <button class="menuitem" type="button" data-act="new"><span class="menuitem__ico">&#10227;</span> Novo jogo</button>
+    <button class="menuitem" type="button" data-act="help"><span class="menuitem__ico">?</span> Regras</button>
+    <button class="menuitem" type="button" data-act="settings"><span class="menuitem__ico">&#9881;</span> Ajustes</button>
+    <button class="sheet__close" type="button" data-close>Fechar</button>
+  </div>
+</dialog>
+
+<!-- ===================== NOVO JOGO ===================== -->
+<dialog class="sheet" id="dlgNew">
+  <div class="sheet__in">
+    <h2 class="sheet__title">Novo jogo</h2>
+    <p class="sheet__sub">Quem começa? A partida abre com o contador no 0.</p>
+    <div class="choice">
+      <button class="choice__btn choice__btn--a" type="button" data-first="a" id="firstA">Jogador 1</button>
+      <button class="choice__btn choice__btn--b" type="button" data-first="b" id="firstB">Jogador 2</button>
+    </div>
+    <button class="sheet__close" type="button" data-close>Cancelar</button>
+  </div>
+</dialog>
+
+<!-- ===================== AJUSTES ===================== -->
+<dialog class="sheet" id="dlgSettings">
+  <div class="sheet__in">
+    <h2 class="sheet__title">Ajustes</h2>
+
+    <label class="field">
+      <span class="field__lbl">Nome do Jogador 1</span>
+      <input class="field__in" type="text" id="inpNameA" maxlength="14" autocomplete="off" spellcheck="false">
+    </label>
+    <label class="field">
+      <span class="field__lbl">Nome do Jogador 2</span>
+      <input class="field__in" type="text" id="inpNameB" maxlength="14" autocomplete="off" spellcheck="false">
+    </label>
+
+    <label class="opt">
+      <input type="checkbox" id="optRotate">
+      <span>
+        <b>Girar o painel do oponente</b>
+        <small>Deixa o painel de cima de cabeça para baixo, para quem está do outro lado da mesa.</small>
+      </span>
+    </label>
+
+    <label class="opt">
+      <input type="checkbox" id="optVibrate">
+      <span>
+        <b>Vibrar na troca de turno</b>
+        <small>Só funciona em aparelhos com suporte a vibração.</small>
+      </span>
+    </label>
+
+    <label class="opt">
+      <input type="checkbox" id="optWake">
+      <span>
+        <b>Manter a tela ligada</b>
+        <small>Evita que o aparelho apague no meio da partida.</small>
+      </span>
+    </label>
+
+    <button class="sheet__close sheet__close--primary" type="button" data-close>Fechar</button>
+  </div>
+</dialog>
+
+<!-- ===================== REGRAS ===================== -->
+<dialog class="sheet" id="dlgHelp">
+  <div class="sheet__in sheet__in--text">
+    <h2 class="sheet__title">Como funciona a memória</h2>
+
+    <p>A memória é um <b>recurso compartilhado</b>: existe um único contador numa régua que vai de <b>10 de um lado, passa pelo 0, até 10 do outro</b>. Não há mana nem terrenos — o que você gasta vira combustível para o oponente.</p>
+
+    <h3>O básico</h3>
+    <ul>
+      <li><b>Pagar</b> — jogar ou digivolver empurra o contador em direção ao oponente.</li>
+      <li><b>Ganhar</b> — efeitos podem trazer o contador de volta para o seu lado.</li>
+      <li><b>Início da partida</b> — o contador começa em 0, e o jogador inicial abre o turno sem memória nenhuma.</li>
+      <li><b>Fim do turno</b> — assim que o contador entra no lado do oponente, o turno acaba e ele começa com <b>exatamente</b> aquela memória de graça. Não há piso: dá para passar o turno entregando só 1.</li>
+      <li><b>Encerrar voluntariamente</b> — quem termina a fase principal com o contador em 0 ou do próprio lado entrega 3 de memória ao oponente.</li>
+      <li><b>A decisão central</b> — gastar até o fim entrega um turno enorme; parar em 1 sufoca o oponente, mas você faz pouco.</li>
+    </ul>
+
+    <h3>Nesta aplicação</h3>
+    <ul>
+      <li>Os botões <b>&minus;</b> e <b>+</b> pagam e ganham 1 de memória.</li>
+      <li>O teclado de custo paga aquele valor de uma vez só.</li>
+      <li>A troca de turno é <b>automática</b> quando o contador cruza para o outro lado.</li>
+      <li><b>Tocar direto na régua</b> reposiciona o contador manualmente — use para corrigir erros.</li>
+      <li>Os dois lados ficam sempre ativos, porque efeitos de <i>Counter</i> custam memória no turno do oponente.</li>
+      <li><b>Desfazer</b> volta jogada a jogada. A partida fica salva no aparelho.</li>
+    </ul>
+
+    <h3>Atalhos no teclado</h3>
+    <ul class="keys">
+      <li><kbd>1</kbd>&ndash;<kbd>9</kbd> jogador da vez paga esse custo</li>
+      <li><kbd>G</kbd> jogador da vez ganha 1</li>
+      <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> movem o contador na régua</li>
+      <li><kbd>Espaço</kbd> encerrar turno</li>
+      <li><kbd>Z</kbd> desfazer &middot; <kbd>M</kbd> menu &middot; <kbd>N</kbd> novo jogo</li>
+    </ul>
+
+    <p class="disclaimer">Projeto de fã, sem fins lucrativos e sem afiliação com a Bandai. Digimon e Digimon Card Game são marcas registradas de seus respectivos detentores.</p>
+
+    <button class="sheet__close sheet__close--primary" type="button" data-close>Entendi</button>
+  </div>
+</dialog>
+
+<script src="./js/app.js"></script>
+</body>
+</html>
