@@ -21,6 +21,29 @@ fica girado 180°, e a régua de -10 a 10 no meio mostra de quem é o contador.
 - **Estado salvo no aparelho** — fechar e reabrir não perde a partida.
 - **PWA offline**: instalável e funciona sem internet depois da primeira visita.
 
+## Fundo de circuitos
+
+Traços de placa gerados em [`js/circuit.js`](js/circuit.js) a partir de uma
+grade, com os cantos cortados em 45°, vias nas pontas e alguns chips. Cada
+elemento acende e apaga no seu próprio tempo, então o fundo respira sem
+chamar atenção.
+
+- **Semente fixa**: o desenho é sempre o mesmo em cada tamanho de tela.
+- **Gradiente vertical** laranja em cima, ciano embaixo, acompanhando as
+  cores dos dois jogadores.
+- **Só opacidade é animada** — nada de blur ou filtro, que pesariam numa
+  partida longa de celular.
+- **Cerca de um terço aceso por vez** (medido: média de 34%, variando entre
+  23% e 49%). Janela estreita de brilho é o que faz parecer que acende aos
+  poucos, em vez de um fundo permanentemente iluminado.
+- Redesenha ao girar a tela, via `ResizeObserver` com os eventos de janela e
+  `visibilitychange` como reforço.
+- Respeita `prefers-reduced-motion`: os traços ficam acesos de leve e parados.
+- Pode ser desligado nos Ajustes, para economizar bateria.
+
+Os painéis têm base escura própria (`rgba(11,16,25,.66)`) para que os traços
+passem por trás sem disputar contraste com os números.
+
 ## Layout em paisagem no celular
 
 Otimizado para o Galaxy S20 FE deitado (915×412 CSS), que é a posição natural

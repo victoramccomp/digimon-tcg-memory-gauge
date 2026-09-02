@@ -41,6 +41,7 @@
   var defaultSettings = {
     names: { a: 'Jogador 1', b: 'Jogador 2' },
     rotate: true,
+    circuit: true,
     vibrate: true,
     wake: true
   };
@@ -99,6 +100,7 @@
     el.inpName = { a: $('inpNameA'), b: $('inpNameB') };
     el.opt = {
       rotate: $('optRotate'),
+      circuit: $('optCircuit'),
       vibrate: $('optVibrate'),
       wake: $('optWake')
     };
@@ -296,9 +298,11 @@
 
   function applySettings() {
     el.body.classList.toggle('rotate-opponent', !!settings.rotate);
+    el.body.classList.toggle('no-circuit', !settings.circuit);
     el.inpName.a.value = settings.names.a;
     el.inpName.b.value = settings.names.b;
     el.opt.rotate.checked = !!settings.rotate;
+    el.opt.circuit.checked = !!settings.circuit;
     el.opt.vibrate.checked = !!settings.vibrate;
     el.opt.wake.checked = !!settings.wake;
     el.first.a.textContent = nameOf('a');
@@ -437,6 +441,11 @@
       settings.rotate = el.opt.rotate.checked;
       persistSettings();
       el.body.classList.toggle('rotate-opponent', settings.rotate);
+    });
+    el.opt.circuit.addEventListener('change', function () {
+      settings.circuit = el.opt.circuit.checked;
+      persistSettings();
+      el.body.classList.toggle('no-circuit', !settings.circuit);
     });
     el.opt.vibrate.addEventListener('change', function () {
       settings.vibrate = el.opt.vibrate.checked;

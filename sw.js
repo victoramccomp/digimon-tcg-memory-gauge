@@ -1,12 +1,13 @@
 /* Service worker — cache do app shell para uso offline na mesa de jogo. */
 
-var CACHE = 'memory-gauge-v1';
+var CACHE = 'memory-gauge-v2';
 
 var SHELL = [
   './',
   './index.html',
   './css/styles.css',
   './js/app.js',
+  './js/circuit.js',
   './manifest.webmanifest',
   './icons/icon.svg'
 ];

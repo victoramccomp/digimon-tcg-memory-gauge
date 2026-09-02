@@ -20,6 +20,8 @@
 </head>
 <body>
 
+<div class="circuit" id="circuit" aria-hidden="true"></div>
+
 <div class="app">
   <main class="board">
 
@@ -148,6 +150,14 @@
     </label>
 
     <label class="opt">
+      <input type="checkbox" id="optCircuit">
+      <span>
+        <b>Fundo de circuitos</b>
+        <small>Traços que acendem devagar atrás do contador. Desligue para economizar bateria.</small>
+      </span>
+    </label>
+
+    <label class="opt">
       <input type="checkbox" id="optVibrate">
       <span>
         <b>Vibrar na troca de turno</b>
@@ -209,6 +219,7 @@
   </div>
 </dialog>
 
+<script src="./js/circuit.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>
