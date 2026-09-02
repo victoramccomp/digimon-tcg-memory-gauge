@@ -1,0 +1,695 @@
+/* =========================================================
+   Memory Gauge — Digimon TCG
+   Contador de memória compartilhada
+   ========================================================= */
+
+:root{
+  /* superfícies */
+  --bg:        #0a0e16;
+  --bg-glow-a: rgba(53, 200, 255, .10);
+  --bg-glow-b: rgba(255, 122, 61, .10);
+  --surface:   rgba(255,255,255,.035);
+  --surface-2: rgba(255,255,255,.06);
+  --stroke:    rgba(255,255,255,.09);
+  --stroke-2:  rgba(255,255,255,.16);
+
+  /* texto */
+  --text:  #e9eefb;
+  --muted: #8592ab;
+  --faint: #5b667d;
+
+  /* jogadores */
+  --a:    #35c8ff;
+  --a-dk: #0f6f96;
+  --b:    #ff8a3d;
+  --b-dk: #a34a14;
+
+  /* métricas */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --pad:  clamp(10px, 3vw, 18px);
+
+  --ease: cubic-bezier(.34, 1.32, .5, 1);
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html, body{ height: 100%; }
+
+body{
+  margin: 0;
+  background:
+    radial-gradient(120% 55% at 50% -8%,  var(--bg-glow-b), transparent 60%),
+    radial-gradient(120% 55% at 50% 108%, var(--bg-glow-a), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button, input{ font: inherit; color: inherit; }
+button{ cursor: pointer; touch-action: manipulation; }
+
+:focus-visible{
+  outline: 2px solid var(--a);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* =========================================================
+   Estrutura
+   ========================================================= */
+
+.app{
+  height: 100dvh;
+  padding:
+    max(var(--pad), env(safe-area-inset-top))
+    max(var(--pad), env(safe-area-inset-right))
+    max(var(--pad), env(safe-area-inset-bottom))
+    max(var(--pad), env(safe-area-inset-left));
+  display: flex;
+  justify-content: center;
+}
+
+.board{
+  width: 100%;
+  max-width: 560px;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  gap: clamp(8px, 2.2vh, 16px);
+  min-height: 0;
+}
+
+/* =========================================================
+   Painel do jogador
+   ========================================================= */
+
+.player{
+  position: relative;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  transition: border-color .3s, box-shadow .3s, background .3s;
+  min-height: 0;
+}
+
+.player__inner{
+  height: 100%;
+  padding: clamp(10px, 2.4vh, 18px) clamp(12px, 3.5vw, 20px);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: clamp(6px, 1.6vh, 14px);
+  align-content: center;
+}
+
+/* painel de cima girado para quem está do outro lado da mesa */
+body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
+
+/* O giro de 180° já entrega o mesmo arranjo para quem está do outro lado:
+   o item mais à esquerda na tela é o mais à direita para o oponente.
+   Por isso nada de inverter a ordem no DOM — seria um giro em dobro. */
+
+/* destaque de quem está na vez */
+.player.is-turn{ background: var(--surface-2); }
+.player--a.is-turn{
+  border-color: color-mix(in srgb, var(--a) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--a) 22%, transparent),
+              0 10px 42px -14px color-mix(in srgb, var(--a) 70%, transparent);
+}
+.player--b.is-turn{
+  border-color: color-mix(in srgb, var(--b) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--b) 22%, transparent),
+              0 10px 42px -14px color-mix(in srgb, var(--b) 70%, transparent);
+}
+
+.player__head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.player__name{
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  font-size: clamp(13px, 3.4vw, 15px);
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--text);
+  text-align: left;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player--a .player__name{ color: var(--a); }
+.player--b .player__name{ color: var(--b); }
+
+.player__badge{
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity .25s, transform .25s;
+}
+.player--a .player__badge{ background: color-mix(in srgb, var(--a) 18%, transparent); color: var(--a); }
+.player--b .player__badge{ background: color-mix(in srgb, var(--b) 18%, transparent); color: var(--b); }
+.player.is-turn .player__badge{ opacity: 1; transform: none; }
+
+/* ---- número grande + steppers ---- */
+
+.player__mem{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 4vw, 22px);
+  min-height: 0;
+}
+
+.round{
+  flex: 0 0 auto;
+  width:  clamp(46px, 13vw, 62px);
+  height: clamp(46px, 13vw, 62px);
+  border-radius: 50%;
+  border: 1px solid var(--stroke-2);
+  background: var(--surface-2);
+  font-size: clamp(22px, 6vw, 30px);
+  font-weight: 600;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: transform .12s var(--ease), background .18s, border-color .18s;
+}
+.round:active{ transform: scale(.9); }
+.player--a .round--pay:hover  { border-color: var(--a); color: var(--a); }
+.player--a .round--gain:hover { border-color: var(--a); color: var(--a); }
+.player--b .round--pay:hover  { border-color: var(--b); color: var(--b); }
+.player--b .round--gain:hover { border-color: var(--b); color: var(--b); }
+
+.mem{
+  display: grid;
+  place-items: center;
+  min-width: clamp(78px, 24vw, 110px);
+}
+.mem__num{
+  font-size: clamp(52px, 17vw, 82px);
+  font-weight: 800;
+  line-height: .95;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  transition: color .25s, transform .25s var(--ease), text-shadow .25s;
+}
+.player--a .mem__num{ color: var(--a); text-shadow: 0 0 34px color-mix(in srgb, var(--a) 45%, transparent); }
+.player--b .mem__num{ color: var(--b); text-shadow: 0 0 34px color-mix(in srgb, var(--b) 45%, transparent); }
+.mem__num.is-zero{ color: var(--faint); text-shadow: none; }
+.mem__num.bump{ animation: bump .3s var(--ease); }
+@keyframes bump{ 0%{ transform: scale(1) } 40%{ transform: scale(1.14) } 100%{ transform: scale(1) } }
+
+.mem__lbl{
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 4px;
+}
+
+/* ---- teclado de custo ---- */
+
+.pad{
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(4px, 1.4vw, 7px);
+}
+
+.chip{
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.03);
+  border-radius: var(--r-sm);
+  padding: clamp(7px, 1.6vh, 11px) 0;
+  font-size: clamp(13px, 3.6vw, 16px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  transition: transform .12s var(--ease), background .18s, color .18s, border-color .18s;
+}
+.chip:active{ transform: scale(.92); }
+.player--a .chip:hover, .player--a .chip:focus-visible{
+  background: color-mix(in srgb, var(--a) 16%, transparent);
+  border-color: color-mix(in srgb, var(--a) 50%, transparent);
+  color: var(--a);
+}
+.player--b .chip:hover, .player--b .chip:focus-visible{
+  background: color-mix(in srgb, var(--b) 16%, transparent);
+  border-color: color-mix(in srgb, var(--b) 50%, transparent);
+  color: var(--b);
+}
+.chip:disabled{ opacity: .28; pointer-events: none; }
+
+/* ---- encerrar turno ---- */
+
+.endturn{
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.03);
+  border-radius: var(--r-md);
+  padding: clamp(9px, 1.9vh, 13px);
+  font-size: clamp(12px, 3.2vw, 14px);
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--muted);
+  transition: transform .12s var(--ease), background .2s, color .2s, border-color .2s, opacity .2s;
+}
+.endturn:active{ transform: scale(.98); }
+.endturn:disabled{ opacity: .3; pointer-events: none; }
+.player--a.is-turn .endturn{
+  color: #04222f;
+  background: linear-gradient(180deg, var(--a), color-mix(in srgb, var(--a) 72%, #000));
+  border-color: transparent;
+}
+.player--b.is-turn .endturn{
+  color: #2a1102;
+  background: linear-gradient(180deg, var(--b), color-mix(in srgb, var(--b) 72%, #000));
+  border-color: transparent;
+}
+
+/* =========================================================
+   Centro: turno + régua + ferramentas
+   ========================================================= */
+
+.center{
+  display: grid;
+  gap: clamp(8px, 1.8vh, 14px);
+}
+
+/* barra central: hamburguer + indicador de turno + desfazer.
+   `relative` porque em paisagem o toast ancora aqui dentro. */
+.centerbar{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2.5vw, 14px);
+}
+
+.turn{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  text-align: center;
+}
+.turn__kicker{
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.turn__name{
+  font-size: clamp(15px, 4.2vw, 19px);
+  font-weight: 800;
+  letter-spacing: -.01em;
+  transition: color .3s;
+}
+.turn__name.side-a{ color: var(--a); }
+.turn__name.side-b{ color: var(--b); }
+.turn__meta{
+  width: 100%;
+  font-size: 11px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- régua ---- */
+
+.gauge{ display: grid; gap: 6px; }
+
+.gauge__ends{
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.gauge__end{ max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gauge__end--a{ color: color-mix(in srgb, var(--a) 75%, var(--faint)); }
+.gauge__end--b{ color: color-mix(in srgb, var(--b) 75%, var(--faint)); }
+
+.gauge__track{
+  position: relative;
+  display: flex;
+  height: clamp(48px, 8.5vh, 64px);
+  border-radius: var(--r-md);
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.28);
+  overflow: hidden;
+}
+
+.cell{
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font-size: clamp(9px, 2.5vw, 12px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  position: relative;
+  transition: background .25s, color .25s;
+}
+.cell + .cell{ box-shadow: inset 1px 0 0 rgba(255,255,255,.05); }
+.cell--zero{ color: var(--muted); font-weight: 800; }
+.cell--zero::after{
+  content: "";
+  position: absolute;
+  inset: 4px 0;
+  border-left:  1px solid rgba(255,255,255,.14);
+  border-right: 1px solid rgba(255,255,255,.14);
+}
+.cell.is-filled.side-a{
+  background: color-mix(in srgb, var(--a) 13%, transparent);
+  color: color-mix(in srgb, var(--a) 80%, #fff);
+}
+.cell.is-filled.side-b{
+  background: color-mix(in srgb, var(--b) 13%, transparent);
+  color: color-mix(in srgb, var(--b) 80%, #fff);
+}
+
+.puck{
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: calc(100% / 21);
+  border-radius: var(--r-sm);
+  pointer-events: none;
+  transform: translateX(calc(100% * var(--i, 10)));
+  transition: transform .3s var(--ease), background .3s, box-shadow .3s;
+  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.08));
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,.5), 0 0 20px rgba(255,255,255,.28);
+}
+.puck.side-a{
+  background: linear-gradient(180deg, var(--a), var(--a-dk));
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--a) 80%, #fff), 0 0 22px color-mix(in srgb, var(--a) 65%, transparent);
+}
+.puck.side-b{
+  background: linear-gradient(180deg, var(--b), var(--b-dk));
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--b) 80%, #fff), 0 0 22px color-mix(in srgb, var(--b) 65%, transparent);
+}
+
+/* ---- botões de ícone da barra central ---- */
+
+.tool{
+  flex: 0 0 auto;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  transition: background .18s, color .18s, border-color .18s, transform .12s var(--ease);
+}
+.tool:hover{ background: var(--surface-2); color: var(--text); border-color: var(--stroke-2); }
+.tool:active{ transform: scale(.94); }
+.tool:disabled{ opacity: .32; pointer-events: none; }
+
+.tool--icon{
+  width:  clamp(38px, 10vw, 44px);
+  height: clamp(38px, 10vw, 44px);
+  padding: 0;
+  font-size: clamp(16px, 4.4vw, 19px);
+  line-height: 1;
+}
+
+/* =========================================================
+   Toast
+   ========================================================= */
+
+.toast{
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  transform: translate(-50%, 12px);
+  max-width: min(90vw, 400px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(16, 22, 34, .94);
+  border: 1px solid var(--stroke-2);
+  backdrop-filter: blur(12px);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s, transform .22s var(--ease);
+  z-index: 50;
+}
+.toast.show{ opacity: 1; transform: translate(-50%, 0); }
+
+/* =========================================================
+   Diálogos
+   ========================================================= */
+
+.sheet{
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  width: min(94vw, 460px);
+  max-height: 88dvh;
+}
+.sheet::backdrop{ background: rgba(4, 7, 13, .72); backdrop-filter: blur(6px); }
+
+.sheet__in{
+  background: #121826;
+  border: 1px solid var(--stroke-2);
+  border-radius: var(--r-lg);
+  padding: clamp(18px, 5vw, 26px);
+  display: grid;
+  gap: 14px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,.8);
+}
+.sheet__title{ margin: 0; font-size: clamp(17px, 4.6vw, 21px); font-weight: 800; letter-spacing: -.01em; }
+.sheet__sub{ margin: -6px 0 0; font-size: 13px; color: var(--muted); }
+
+.choice{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice__btn{
+  border: 1px solid var(--stroke-2);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 18px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform .12s var(--ease), background .2s, border-color .2s;
+}
+.choice__btn:active{ transform: scale(.97); }
+.choice__btn--a{ color: var(--a); }
+.choice__btn--a:hover{ background: color-mix(in srgb, var(--a) 18%, transparent); border-color: var(--a); }
+.choice__btn--b{ color: var(--b); }
+.choice__btn--b:hover{ background: color-mix(in srgb, var(--b) 18%, transparent); border-color: var(--b); }
+
+/* itens do menu hamburguer */
+.menuitem{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.03);
+  border-radius: var(--r-md);
+  padding: 15px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+  transition: background .18s, border-color .18s, transform .12s var(--ease);
+}
+.menuitem:hover{ background: var(--surface-2); border-color: var(--stroke-2); }
+.menuitem:active{ transform: scale(.985); }
+.menuitem__ico{ width: 20px; text-align: center; font-size: 17px; line-height: 1; color: var(--a); }
+
+.field{ display: grid; gap: 6px; }
+.field__lbl{ font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.field__in{
+  border: 1px solid var(--stroke-2);
+  background: rgba(0,0,0,.3);
+  border-radius: var(--r-sm);
+  padding: 11px 13px;
+  font-size: 15px;
+  width: 100%;
+}
+.field__in:focus{ outline: none; border-color: var(--a); }
+
+.opt{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,.02);
+  cursor: pointer;
+}
+.opt input{ width: 20px; height: 20px; accent-color: var(--a); margin: 2px 0 0; }
+.opt b{ display: block; font-size: 14px; font-weight: 700; }
+.opt small{ display: block; font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+
+.sheet__close{
+  border: 1px solid var(--stroke-2);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: background .2s, color .2s;
+}
+.sheet__close:hover{ background: rgba(255,255,255,.1); color: var(--text); }
+.sheet__close--primary{ color: var(--text); }
+
+.sheet__in--text{ gap: 10px; font-size: 14px; line-height: 1.6; }
+.sheet__in--text p{ margin: 0; color: var(--muted); }
+.sheet__in--text h3{
+  margin: 10px 0 0;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--a);
+}
+.sheet__in--text ul{ margin: 0; padding-left: 20px; color: var(--muted); display: grid; gap: 6px; }
+.sheet__in--text b{ color: var(--text); }
+.keys{ list-style: none; padding-left: 0 !important; }
+kbd{
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid var(--stroke-2);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text);
+  text-align: center;
+}
+.disclaimer{ font-size: 11px !important; color: var(--faint) !important; margin-top: 8px !important; }
+
+/* =========================================================
+   Telas largas / paisagem
+   ========================================================= */
+
+@media (min-width: 720px) and (orientation: landscape){
+  .board{ max-width: 720px; }
+  .pad{ gap: 8px; }
+}
+
+/* =========================================================
+   Paisagem no celular (alvo: Galaxy S20 FE, ~915x412 CSS)
+   ---------------------------------------------------------
+   Não há altura para empilhar número, teclado e botão. Cada
+   painel vira duas colunas: 30% com "− valor +" e 70% com o
+   teclado de custo sobre o botão de encerrar turno.
+   ========================================================= */
+@media (orientation: landscape) and (max-height: 620px){
+  :root{ --pad: 6px; }
+
+  .board{ max-width: 980px; gap: clamp(5px, 1.4vh, 10px); }
+
+  .player__inner{
+    padding: clamp(5px, 1.5vh, 10px) clamp(10px, 1.6vw, 18px);
+    gap: clamp(4px, 1.1vh, 8px) clamp(10px, 1.6vw, 16px);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 30fr) minmax(0, 70fr);
+    grid-template-areas:
+      "head pad"
+      "mem  end";
+  }
+  .player__head{ grid-area: head; align-self: center; }
+  .player__mem { grid-area: mem;  align-self: center; min-height: auto; gap: clamp(6px, 1.2vw, 14px); }
+  .pad         { grid-area: pad;  align-self: center; gap: clamp(4px, .8vw, 8px); }
+  .endturn     { grid-area: end;  align-self: center; }
+
+  .mem{ min-width: 0; }
+  .mem__lbl{ display: none; }
+  .mem__num{ font-size: clamp(34px, 13vh, 58px); }
+
+  .round{
+    width:  clamp(36px, 12vh, 50px);
+    height: clamp(36px, 12vh, 50px);
+    font-size: clamp(18px, 6vh, 26px);
+  }
+
+  .chip   { padding: clamp(8px, 2.6vh, 14px) 0; font-size: clamp(13px, 1.9vw, 18px); }
+  .endturn{ padding: clamp(8px, 2.6vh, 14px); font-size: clamp(12px, 1.6vw, 15px); }
+
+  /* os nomes já aparecem nos painéis; a régua dispensa as pontas */
+  .gauge__ends { display: none; }
+  .gauge__track{ height: clamp(32px, 11vh, 46px); }
+  .cell{ font-size: clamp(10px, 1.3vw, 13px); }
+
+  /* turno numa linha só, entre o hamburguer e o desfazer */
+  .turn__kicker{ display: none; }
+  .turn__meta  { width: auto; }
+
+  /* diálogos compactos: com pouca altura eles viravam rolagem */
+  .sheet{ width: min(94vw, 420px); }
+  .sheet__in{ padding: 14px 16px; gap: 9px; }
+  .sheet__title{ font-size: 16px; }
+  .sheet__sub{ font-size: 12px; }
+  .menuitem{ padding: 11px 14px; font-size: 14px; }
+  .choice__btn{ padding: 13px 8px; }
+  .opt{ padding: 9px 11px; gap: 10px; }
+  .opt small{ font-size: 11px; }
+  .field__in{ padding: 8px 11px; font-size: 14px; }
+  .sheet__close{ padding: 10px; font-size: 13px; }
+
+  /* ajustes em duas colunas: sobra largura e falta altura */
+  #dlgSettings{ width: min(96vw, 660px); }
+  #dlgSettings .sheet__in{
+    grid-template-columns: 1fr 1fr;
+    align-content: start;
+    column-gap: 12px;
+  }
+  #dlgSettings .sheet__title,
+  #dlgSettings .sheet__close{ grid-column: 1 / -1; }
+
+  /* o aviso sai do rodapé (onde cobria o "Encerrar turno" do jogador de
+     baixo) e passa a cobrir a faixa de turno, que diz a mesma coisa */
+  .toast{
+    position: absolute;
+    left: 50%;
+    right: auto;
+    top: 50%;
+    bottom: auto;
+    max-width: 78%;
+    padding: 7px 15px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transform: translate(-50%, calc(-50% + 8px));
+  }
+  .toast.show{ transform: translate(-50%, -50%); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

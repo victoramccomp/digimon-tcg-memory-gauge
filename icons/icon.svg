@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Memory Gauge">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#131b2b"/>
+      <stop offset="1" stop-color="#080c14"/>
+    </linearGradient>
+    <linearGradient id="puck" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a3d"/>
+      <stop offset="1" stop-color="#a34a14"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- brilhos dos dois lados -->
+  <ellipse cx="140" cy="256" rx="150" ry="110" fill="#35c8ff" opacity=".13"/>
+  <ellipse cx="372" cy="256" rx="150" ry="110" fill="#ff8a3d" opacity=".13"/>
+
+  <!-- trilho -->
+  <rect x="64" y="196" width="384" height="120" rx="30" fill="#05080e" stroke="#ffffff" stroke-opacity=".12" stroke-width="3"/>
+
+  <!-- divisórias -->
+  <g stroke="#ffffff" stroke-opacity=".10" stroke-width="3">
+    <path d="M118 216v80M172 216v80M226 216v80M286 216v80M340 216v80M394 216v80"/>
+  </g>
+
+  <!-- marca do zero -->
+  <g stroke="#ffffff" stroke-opacity=".30" stroke-width="4">
+    <path d="M256 208v96"/>
+  </g>
+
+  <!-- casas preenchidas do lado laranja -->
+  <rect x="288" y="212" width="50" height="88" rx="16" fill="#ff8a3d" opacity=".16"/>
+
+  <!-- contador -->
+  <g filter="url(#glow)">
+    <rect x="342" y="208" width="52" height="96" rx="20" fill="url(#puck)"/>
+    <rect x="342" y="208" width="52" height="96" rx="20" fill="none" stroke="#ffd0ac" stroke-width="4"/>
+  </g>
+
+  <!-- lado ciano -->
+  <rect x="88" y="212" width="24" height="88" rx="10" fill="#35c8ff" opacity=".35"/>
+</svg>
