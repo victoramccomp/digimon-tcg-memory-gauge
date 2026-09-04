@@ -97,7 +97,6 @@
     el.dlgDraw = $('dlgDraw');
     el.draw = $('draw');
     el.drawDisc = $('drawDisc');
-    el.drawTitle = $('drawTitle');
     el.drawStatus = $('drawStatus');
     el.dlgInfo = $('dlgInfo');
     el.info = {
@@ -287,8 +286,7 @@
 
     clearDrawTimers();
     el.draw.classList.remove('is-spinning', 'is-done', 'side-a', 'side-b');
-    el.drawTitle.textContent = 'Sorteando quem começa';
-    el.drawStatus.textContent = rapido ? 'Sorteando…' : 'Girando…';
+    el.drawStatus.textContent = 'Sorteando quem começa';
 
     /* reinicia a animação: sem isso o segundo sorteio não roda de novo */
     void el.drawDisc.offsetWidth;
@@ -299,8 +297,7 @@
 
     drawTimers.push(setTimeout(function () {
       el.draw.classList.add('is-done', 'side-' + winner);
-      el.drawTitle.textContent = 'Começa ' + nameOf(winner);
-      el.drawStatus.textContent = nameOf(winner) + ' abre a partida com a memória em 0';
+      el.drawStatus.textContent = 'Começa ' + nameOf(winner);
       if (settings.vibrate && navigator.vibrate) {
         try { navigator.vibrate([30, 60, 30]); } catch (e) { /* sem suporte */ }
       }

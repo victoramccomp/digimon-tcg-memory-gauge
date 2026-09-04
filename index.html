@@ -140,6 +140,7 @@
   <div class="sheet__in">
     <h2 class="sheet__title">Menu</h2>
     <button class="menuitem" type="button" data-act="new"><span class="menuitem__ico">&#10227;</span> Novo jogo</button>
+    <button class="menuitem" type="button" data-act="new-manual"><span class="menuitem__ico">&#9998;</span> Escolher quem começa</button>
     <button class="menuitem" type="button" data-act="help"><span class="menuitem__ico">?</span> Regras</button>
     <button class="menuitem" type="button" data-act="settings"><span class="menuitem__ico">&#9881;</span> Ajustes</button>
     <button class="sheet__close" type="button" data-close>Fechar</button>
@@ -149,8 +150,6 @@
 <!-- ===================== SORTEIO ===================== -->
 <dialog class="sheet sheet--draw" id="dlgDraw">
   <div class="sheet__in">
-    <h2 class="sheet__title" id="drawTitle">Sorteando quem começa</h2>
-
     <div class="draw" id="draw">
       <span class="draw__marker" aria-hidden="true"></span>
       <div class="draw__disc" id="drawDisc" aria-hidden="true">
@@ -160,10 +159,10 @@
       <div class="draw__device" aria-hidden="true"></div>
     </div>
 
-    <p class="draw__status" id="drawStatus" role="status" aria-live="polite">Girando&hellip;</p>
+    <!-- sem texto na tela: quem lê é o leitor de tela -->
+    <p class="sr-only" id="drawStatus" role="status" aria-live="polite">Sorteando quem começa</p>
 
     <button class="sheet__close" type="button" data-close>Fechar</button>
-    <button class="draw__manual" type="button" data-act="new-manual">Escolher manualmente</button>
   </div>
 </dialog>
 

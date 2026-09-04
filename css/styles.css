@@ -697,11 +697,46 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
    (17,7%) e o anel.
    ========================================================= */
 
+/* O sorteio ocupa a tela toda: só o digivice e o botão de fechar.
+   O quadrado é o maior que cabe — limitado pela altura na horizontal
+   e pela largura na vertical. Tem que continuar quadrado, senão a
+   órbita das luzes vira elipse e desalinha do desenho. */
+#dlgDraw{
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+}
+#dlgDraw .sheet__in{
+  height: 100dvh;
+  max-height: none;
+  padding: 0 0 env(safe-area-inset-bottom);
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgba(8, 12, 19, .96);
+  box-shadow: none;
+  overflow: hidden;
+  grid-template-rows: 9fr 1fr;   /* 90% digivice, 10% botão */
+  place-items: center;
+}
+#dlgDraw .sheet__close{
+  width: min(94vw, 460px);
+  height: min(100%, 56px);
+  min-height: 36px;
+}
+
+/* Quem limita é a altura da linha na horizontal e a largura na
+   vertical — daí o max-height em vw. Precisa continuar quadrado:
+   se a caixa achatar, a órbita das luzes vira elipse e sai de cima
+   do desenho. */
 .draw{
   position: relative;
-  width: min(240px, 46vh, 62vw);
+  height: 100%;
+  width: auto;
   aspect-ratio: 1;
-  margin: 2px auto;
+  max-height: 92vw;
   --dv: var(--muted);
 }
 .draw.side-a{ --dv: var(--a); }
@@ -786,25 +821,18 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   transition: border-top-color .45s;
 }
 
-.draw__status{
-  margin: 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted);
-  min-height: 2.6em;
-}
-.draw.is-done + .draw__status{ color: var(--text); }
-
-.draw__manual{
+/* só para leitor de tela: na tela não fica texto nenhum */
+.sr-only{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
   border: 0;
-  background: none;
-  padding: 4px;
-  font-size: 12px;
-  color: var(--faint);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
-.draw__manual:hover{ color: var(--muted); }
 
 /* diálogo de informação: turno e memória disponível */
 .info{ display: grid; gap: 8px; }
@@ -1015,11 +1043,6 @@ kbd{
   .opt small{ font-size: 11px; }
   .field__in{ padding: 8px 11px; font-size: 14px; }
   .sheet__close{ padding: 10px; font-size: 13px; }
-
-  /* o sorteio é o diálogo mais alto: encolhe para não virar rolagem */
-  #dlgDraw .sheet__in{ padding: 10px 14px; gap: 6px; }
-  .draw{ width: min(190px, 36vh, 38vw); margin: 0 auto; }
-  .draw__status{ font-size: 11.5px; min-height: 2.2em; }
 
   /* ajustes em duas colunas: sobra largura e falta altura */
   #dlgSettings{ width: min(96vw, 660px); }

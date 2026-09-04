@@ -67,9 +67,13 @@ passe por trás sem disputar contraste: no pico, uma luz chega ao conteúdo a
 
 ## O sorteio de quem começa
 
-"Novo jogo" abre o digivice com duas luzes — a azul do Jogador 1 e a laranja do
-Jogador 2 — girando por 5 segundos em velocidade crescente. No fim o digivice
-assume a cor de quem começa.
+"Novo jogo" abre o digivice **em tela cheia**, com duas luzes — a azul do
+Jogador 1 e a laranja do Jogador 2 — girando por 5 segundos em velocidade
+crescente. No fim o digivice assume a cor de quem começa.
+
+Na tela só ficam o digivice (90% da altura) e o botão de fechar (10%). Sem
+título, sem texto de status: quem lê o resultado é a cor do aparelho e a luz
+que sobrou. O anúncio em texto existe só para leitor de tela.
 
 - **O lado sai antes da animação**, de `Math.random() < 0.5`. O giro só encena
   o resultado; não há nada na animação que possa enviesar o sorteio. Verificado
@@ -89,7 +93,11 @@ assume a cor de quem começa.
   20,5%, na faixa livre entre os detalhes internos (17,7%) e o anel.
 - Fechar o sorteio antes do fim **cancela**: o jogo novo não começa.
 - Com `prefers-reduced-motion` o giro é pulado e o resultado aparece direto.
-- "Escolher manualmente" continua disponível, para quem já decidiu na mesa.
+- O quadrado do digivice é limitado pela **altura** na horizontal e pela
+  **largura** na vertical. Ele precisa continuar quadrado: se achatar, a órbita
+  das luzes vira elipse e sai de cima do desenho.
+- A escolha manual saiu do sorteio e virou **"Escolher quem começa"** no menu,
+  para quem já decidiu na mesa.
 
 ## A régua
 
