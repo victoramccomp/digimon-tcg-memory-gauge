@@ -194,7 +194,13 @@ body.no-circuit .circuit{ display: none; }
   grid-template-rows: auto 1fr auto auto;
   gap: clamp(6px, 1.6vh, 14px);
   align-content: center;
+  transition: opacity .3s;
 }
+
+/* O esmaecimento é só de quem não está na vez — o painel inteiro recua.
+   Os controles seguem clicáveis de propósito: efeitos de Counter custam
+   memória no turno do oponente. */
+.player:not(.is-turn) .player__inner{ opacity: .42; }
 
 /* painel de cima girado para quem está do outro lado da mesa */
 body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
@@ -344,6 +350,13 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
 }
 .chip:disabled{ opacity: .28; pointer-events: none; }
 
+/* quem está na vez usa o teclado o tempo todo: sem meio-tom nele */
+.player.is-turn .chip{
+  color: var(--text);
+  background: rgba(255,255,255,.07);
+  border-color: var(--stroke-2);
+}
+
 /* ---- encerrar turno ---- */
 
 .endturn{
@@ -358,7 +371,9 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   transition: transform .12s var(--ease), background .2s, color .2s, border-color .2s, opacity .2s;
 }
 .endturn:active{ transform: scale(.98); }
-.endturn:disabled{ opacity: .3; pointer-events: none; }
+/* sem opacidade própria: o painel de quem não está na vez já recuou, e
+   somar as duas deixava o botão quase invisível */
+.endturn:disabled{ pointer-events: none; }
 .player--a.is-turn .endturn{
   color: #04222f;
   background: linear-gradient(180deg, var(--a), color-mix(in srgb, var(--a) 72%, #000));
@@ -516,7 +531,8 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   position: relative;
   display: grid;
   place-items: center;
-  color: var(--faint);
+  /* a régua é referência dos dois jogadores o tempo todo: nada de meio-tom */
+  color: var(--text);
   font-size: clamp(12px, 3.4vw, 17px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -531,14 +547,14 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   position: absolute;
   inset: 8% 3%;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  background: rgba(255,255,255,.05);
+  background: rgba(255,255,255,.10);
   transition: background .25s, filter .25s;
 }
 
 .cell__n{ position: relative; z-index: 1; }
 
-.cell--zero{ color: var(--muted); font-weight: 800; }
-.cell--zero::before{ background: rgba(255,255,255,.10); }
+.cell--zero{ font-weight: 800; }
+.cell--zero::before{ background: rgba(255,255,255,.17); }
 
 .cell.is-filled.side-a{ color: color-mix(in srgb, var(--a) 80%, #fff); }
 .cell.is-filled.side-a::before{ background: color-mix(in srgb, var(--a) 22%, transparent); }

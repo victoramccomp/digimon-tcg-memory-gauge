@@ -15,6 +15,9 @@ fica girado 180°, e a régua de -10 a 10 no meio mostra de quem é o contador.
   entregando exatamente a memória empurrada — sem piso, então passar com 1 funciona.
 - **Encerrar o turno** com o contador em 0 ou do próprio lado entrega 3 ao oponente.
 - **Teclado de custo** de 1 a 8 para pagar o custo da carta em um toque.
+- **O painel de quem não está na vez recua** (opacidade 0,42), enquanto o de
+  quem joga e a régua ficam em brilho cheio. Os controles do lado esmaecido
+  continuam clicáveis de propósito — é só recuo visual.
 - **Dois lados sempre ativos**, porque efeitos de *Counter* custam memória
   durante o turno do oponente.
 - **Toque direto na régua** para corrigir a posição manualmente.
