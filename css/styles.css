@@ -442,28 +442,32 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
    Quem lê é o marcador fixo — a impressão é de que a régua se
    move, não o contador.
 
-   A tira tem 210% da janela, então cada uma das 21 casas mede
-   210%/21 = 10% da janela: 10 casas à vista. Nada de gap entre
+   A tira tem 2100%/11 da janela, então cada uma das 21 casas
+   mede (2100/11)/21 = 1/11 da janela: 11 casas à vista, com a
+   ativa no centro e 5 inteiras de cada lado. Nada de gap entre
    as casas, senão essa conta quebra — o espaço entre hexágonos
    vem do recuo lateral do ::before.
    --------------------------------------------------------- */
 
 .gauge__viewport{
   position: relative;
-  /* A altura acompanha a largura da casa (largura/10), senão numa tela
-     estreita o hexágono sai mais alto que largo e perde a forma.
-     Em paisagem a altura é fixada de novo, e altura explícita vence
-     aspect-ratio. */
+  /* A altura acompanha a largura da casa, senão numa tela estreita o
+     hexágono perde a proporção. CUIDADO: com altura definida e largura
+     automática, aspect-ratio passa a mandar na LARGURA e encolhe a
+     régua — por isso o bloco de paisagem, que fixa a altura, precisa
+     zerar a razão com `aspect-ratio: auto`. */
   height: auto;
-  aspect-ratio: 11.5 / 1;
-  min-height: 30px;
-  max-height: 64px;
+  aspect-ratio: 9.5 / 1;
+  min-height: 32px;
+  max-height: 72px;
   overflow: hidden;
   overflow: clip;   /* `clip` não cria área rolável: foco numa casa
                        fora da janela não desloca a tira */
   --reader: var(--muted);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 11%, #000 89%, transparent);
-          mask-image: linear-gradient(to right, transparent, #000 11%, #000 89%, transparent);
+  /* esmaecimento curto: com 11 casas as das pontas ficam inteiras à
+     vista, então a borda só suaviza em vez de apagar */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
 }
 .gauge__viewport.side-a{ --reader: var(--a); }
 .gauge__viewport.side-b{ --reader: var(--b); }
@@ -471,8 +475,8 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
 .gauge__strip{
   display: flex;
   height: 100%;
-  width: 210%;
-  transform: translateX(calc((4.5 - var(--i, 10)) * 100% / 21));
+  width: calc(2100% / 11);
+  transform: translateX(calc((5 - var(--i, 10)) * 100% / 21));
   transition: transform .34s var(--ease);
 }
 
@@ -482,7 +486,7 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   left: 50%;
   top: 0;
   bottom: 0;
-  width: calc(100% / 10);
+  width: calc(100% / 11);
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -519,12 +523,14 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   transition: color .25s;
 }
 
-/* o hexágono é o fundo da casa; o recuo lateral é o respiro entre eles */
+/* O hexágono é o fundo da casa; o recuo lateral é o respiro entre eles.
+   De ponta para cima, porque a casa é mais alta que larga — deitado
+   ficaria um hexágono esticado. */
 .cell::before{
   content: "";
   position: absolute;
-  inset: 5% 9%;
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  inset: 8% 3%;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   background: rgba(255,255,255,.05);
   transition: background .25s, filter .25s;
 }
@@ -828,25 +834,36 @@ kbd{
      vez já se lê no painel aceso. Quem quiser o número exato abre o
      botão de informação, que entra no lugar do texto. */
   .center{
+    /* medidas dos botões viram variáveis para a régua casar com a
+       altura da coluna e a faixa ficar ocupada por inteiro */
+    --tool: clamp(30px, 8.5vh, 38px);
+    --tool-gap: clamp(4px, 1vh, 7px);
+
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: clamp(8px, 1.4vw, 14px);
   }
   .centerbar{
     flex-direction: column;
-    gap: clamp(4px, 1vh, 7px);
+    gap: var(--tool-gap);
   }
   .turn{ display: none; }
   .tool--info{ display: grid; }
 
   .tool--icon{
-    width:  clamp(30px, 8.5vh, 38px);
-    height: clamp(30px, 8.5vh, 38px);
+    width:  var(--tool);
+    height: var(--tool);
     font-size: clamp(14px, 4vh, 18px);
   }
 
-  /* com a faixa só para ela, a régua pode crescer */
-  .gauge__viewport{ height: clamp(40px, 15vh, 66px); }
+  /* A régua ocupa exatamente a altura da coluna de botões, então a
+     faixa do meio fica cheia e simétrica. `aspect-ratio: auto` é
+     obrigatório: com altura definida, a razão encolheria a largura. */
+  .gauge__viewport{
+    height: calc(3 * var(--tool) + 2 * var(--tool-gap));
+    max-height: none;
+    aspect-ratio: auto;
+  }
   .cell{ font-size: clamp(13px, 1.9vw, 20px); }
 
   /* diálogos compactos: com pouca altura eles viravam rolagem */
@@ -871,8 +888,10 @@ kbd{
   #dlgSettings .sheet__title,
   #dlgSettings .sheet__close{ grid-column: 1 / -1; }
 
-  /* O aviso ancora na folga acima da régua: no rodapé cobria o
-     "Encerrar turno" do jogador de baixo, e no meio cobriria a régua. */
+  /* O aviso encosta no topo da régua. Não há mais folga acima dela,
+     mas os números ficam no meio das casas, então uma faixa de 22px
+     no topo não cobre leitura nenhuma — e no rodapé ele cobria o
+     "Encerrar turno" do jogador de baixo. */
   .toast{
     position: absolute;
     left: 50%;
