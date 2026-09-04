@@ -94,6 +94,12 @@
       b: document.querySelector('.player--b .endturn')
     };
     el.dlgMenu = $('dlgMenu');
+    el.dlgInfo = $('dlgInfo');
+    el.info = {
+      turnNo: $('infoTurnNo'),
+      turnName: $('infoTurnName'),
+      mem: $('infoMem')
+    };
     el.dlgNew = $('dlgNew');
     el.dlgSettings = $('dlgSettings');
     el.dlgHelp = $('dlgHelp');
@@ -277,6 +283,14 @@
     el.turnMeta.textContent =
       'turno ' + state.turnNo + ' · ' + memOf(turn) + ' de memória disponível';
 
+    /* o diálogo de informação carrega o mesmo conteúdo, para quando a
+       faixa de turno estiver escondida (paisagem) */
+    el.info.turnNo.textContent = String(state.turnNo);
+    el.info.turnName.textContent = nameOf(turn);
+    el.info.turnName.className = 'info__value side-' + turn;
+    el.info.mem.textContent = String(memOf(turn));
+    el.info.mem.className = 'info__value info__value--big side-' + turn;
+
     // régua
     for (var i = 0; i < cells.length; i++) {
       var v = i - MAX;
@@ -397,6 +411,7 @@
         case 'end':  endTurn(p); break;
         case 'undo': undo(); break;
         case 'menu': openDialog(el.dlgMenu); break;
+        case 'info': openDialog(el.dlgInfo); break;
         case 'new':  openDialog(el.dlgNew); break;
         case 'help': openDialog(el.dlgHelp); break;
         case 'settings': openDialog(el.dlgSettings); break;
@@ -476,6 +491,7 @@
         case 'enter': endTurn(state.turn); ev.preventDefault(); break;
         case 'z': undo(); ev.preventDefault(); break;
         case 'm': openDialog(el.dlgMenu); ev.preventDefault(); break;
+        case 'i': openDialog(el.dlgInfo); ev.preventDefault(); break;
         case 'n': openDialog(el.dlgNew); ev.preventDefault(); break;
         case '?': openDialog(el.dlgHelp); ev.preventDefault(); break;
       }

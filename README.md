@@ -62,18 +62,24 @@ passe por trás sem disputar contraste: no pico, uma luz chega ao conteúdo a
 Otimizado para o Galaxy S20 FE deitado (915×412 CSS), que é a posição natural
 com o aparelho na mesa entre os jogadores:
 
-- Novo jogo, Regras e Ajustes ficam num **menu hamburguer** na barra central,
-  deixando só ele e o Desfazer visíveis durante a partida.
+- **A faixa do meio é só da régua.** Os botões saem para uma coluna estreita
+  de 35px na esquerda (menu, desfazer, informação) e a régua fica com os
+  855px restantes, crescendo de 45 para 62px de altura.
+- **Sem o texto de turno no meio** — de quem é a vez já se lê no painel aceso.
+  No lugar dele entra o botão **i**, que abre turno atual e memória
+  disponível. Em retrato o botão some, porque lá a faixa de turno aparece.
+- Novo jogo, Regras e Ajustes ficam num **menu hamburguer**.
 - Cada painel vira **duas colunas**: 30% com `− valor +` e 70% com o teclado de
   custo sobre o botão de encerrar turno.
-- A régua ocupa a largura toda, sem as etiquetas de ponta (os nomes já
-  aparecem nos painéis).
-- O aviso de troca de turno ancora **sobre a barra central** em vez do rodapé,
-  onde cobriria o botão de encerrar turno do jogador de baixo.
+- A régua não mostra as etiquetas de ponta (os nomes já estão nos painéis).
+- O aviso de troca de turno ancora na **folga acima da régua**: no rodapé
+  cobria o botão de encerrar turno do jogador de baixo, e no meio cobriria a
+  própria régua.
 - Os Ajustes abrem em duas colunas, para caber sem rolagem.
 
 Alvos de toque na horizontal: teclado de custo 49px, botões redondos 50px,
-hamburguer 44px, casas da régua 43×45px.
+casas da régua 43×62px, e 35px nos três botões da coluna — menores porque são
+controles secundários, fora do fluxo da partida.
 
 ## Atalhos de teclado
 
@@ -85,6 +91,7 @@ hamburguer 44px, casas da régua 43×45px.
 | `Espaço` / `Enter` | encerrar turno |
 | `Z` | desfazer |
 | `M` | abrir o menu |
+| `I` | turno atual e memória disponível |
 | `N` | novo jogo |
 | `?` | abrir as regras |
 

@@ -375,14 +375,15 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
    ========================================================= */
 
 .center{
+  position: relative;   /* em paisagem o toast ancora aqui */
   display: grid;
   gap: clamp(8px, 1.8vh, 14px);
 }
 
-/* barra central: hamburguer + indicador de turno + desfazer.
-   `relative` porque em paisagem o toast ancora aqui dentro. */
+/* Em retrato é uma linha (menu, turno, desfazer); em paisagem vira a
+   coluna estreita da esquerda, com o botão de informação no lugar do
+   texto de turno. */
 .centerbar{
-  position: relative;
   display: flex;
   align-items: center;
   gap: clamp(8px, 2.5vw, 14px);
@@ -524,6 +525,16 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
   line-height: 1;
 }
 
+/* Em retrato a faixa de turno já diz o que o "i" mostraria, então ele
+   só aparece em paisagem. Precisa vir depois de `.tool`, que também
+   define display com a mesma especificidade. */
+.tool--info{
+  display: none;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+}
+
 /* =========================================================
    Toast
    ========================================================= */
@@ -594,6 +605,30 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
 .choice__btn--a:hover{ background: color-mix(in srgb, var(--a) 18%, transparent); border-color: var(--a); }
 .choice__btn--b{ color: var(--b); }
 .choice__btn--b:hover{ background: color-mix(in srgb, var(--b) 18%, transparent); border-color: var(--b); }
+
+/* diálogo de informação: turno e memória disponível */
+.info{ display: grid; gap: 8px; }
+.info__row{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 14px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,.03);
+}
+.info__row--strong{ background: rgba(255,255,255,.06); }
+.info__label{ font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.info__value{
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.info__value--big{ font-size: 28px; line-height: 1; }
+.info__value.side-a{ color: var(--a); }
+.info__value.side-b{ color: var(--b); }
 
 /* itens do menu hamburguer */
 .menuitem{
@@ -734,9 +769,30 @@ kbd{
   .gauge__track{ height: clamp(32px, 11vh, 46px); }
   .cell{ font-size: clamp(10px, 1.3vw, 13px); }
 
-  /* turno numa linha só, entre o hamburguer e o desfazer */
-  .turn__kicker{ display: none; }
-  .turn__meta  { width: auto; }
+  /* A faixa do meio fica só para a régua: os botões saem para uma
+     coluna estreita à esquerda e o texto de turno some — de quem é a
+     vez já se lê no painel aceso. Quem quiser o número exato abre o
+     botão de informação, que entra no lugar do texto. */
+  .center{
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(8px, 1.4vw, 14px);
+  }
+  .centerbar{
+    flex-direction: column;
+    gap: clamp(4px, 1vh, 7px);
+  }
+  .turn{ display: none; }
+  .tool--info{ display: grid; }
+
+  .tool--icon{
+    width:  clamp(30px, 8.5vh, 38px);
+    height: clamp(30px, 8.5vh, 38px);
+    font-size: clamp(14px, 4vh, 18px);
+  }
+
+  /* com a faixa só para ela, a régua pode crescer */
+  .gauge__track{ height: clamp(40px, 15vh, 66px); }
 
   /* diálogos compactos: com pouca altura eles viravam rolagem */
   .sheet{ width: min(94vw, 420px); }
@@ -760,23 +816,24 @@ kbd{
   #dlgSettings .sheet__title,
   #dlgSettings .sheet__close{ grid-column: 1 / -1; }
 
-  /* o aviso sai do rodapé (onde cobria o "Encerrar turno" do jogador de
-     baixo) e passa a cobrir a faixa de turno, que diz a mesma coisa */
+  /* O aviso ancora na folga acima da régua: no rodapé cobria o
+     "Encerrar turno" do jogador de baixo, e no meio cobriria a régua. */
   .toast{
     position: absolute;
     left: 50%;
     right: auto;
-    top: 50%;
+    top: 0;
     bottom: auto;
-    max-width: 78%;
-    padding: 7px 15px;
-    font-size: 12px;
+    max-width: 80%;
+    padding: 3px 12px;
+    font-size: 11.5px;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transform: translate(-50%, calc(-50% + 8px));
+    transform: translate(-50%, -6px);
   }
-  .toast.show{ transform: translate(-50%, -50%); }
+  .toast.show{ transform: translate(-50%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce){

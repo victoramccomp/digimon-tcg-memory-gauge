@@ -50,6 +50,9 @@
 
     <!-- ===================== CENTRO ===================== -->
     <section class="center">
+      <!-- Em retrato isto é uma linha: menu, turno, desfazer.
+           Em paisagem vira a coluna estreita da esquerda, o texto do
+           turno some e entra o botão de informação no lugar dele. -->
       <div class="centerbar">
         <button class="tool tool--icon" type="button" data-act="menu" title="Menu (M)" aria-label="Abrir menu" aria-haspopup="dialog">&#9776;</button>
 
@@ -60,9 +63,7 @@
         </div>
 
         <button class="tool tool--icon" type="button" data-act="undo" id="btnUndo" title="Desfazer (Z)" aria-label="Desfazer">&#8630;</button>
-
-        <!-- em paisagem o aviso ancora aqui, sobre a faixa de turno -->
-        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        <button class="tool tool--icon tool--info" type="button" data-act="info" title="Turno e memória (I)" aria-label="Ver turno e memória" aria-haspopup="dialog">i</button>
       </div>
 
       <div class="gauge">
@@ -74,6 +75,10 @@
           <div class="puck" id="puck" aria-hidden="true"></div>
         </div>
       </div>
+
+      <!-- Em retrato flutua no rodapé; em paisagem ancora na folga acima
+           da régua, para não cobrir nem a régua nem os painéis. -->
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     </section>
 
@@ -102,6 +107,30 @@
 
   </main>
 </div>
+
+<!-- ===================== INFORMAÇÃO ===================== -->
+<dialog class="sheet sheet--info" id="dlgInfo">
+  <div class="sheet__in">
+    <h2 class="sheet__title">Turno atual</h2>
+
+    <div class="info">
+      <div class="info__row">
+        <span class="info__label">Turno</span>
+        <strong class="info__value" id="infoTurnNo">1</strong>
+      </div>
+      <div class="info__row">
+        <span class="info__label">Jogador da vez</span>
+        <strong class="info__value" id="infoTurnName">Jogador 1</strong>
+      </div>
+      <div class="info__row info__row--strong">
+        <span class="info__label">Memória disponível</span>
+        <strong class="info__value" id="infoMem">0</strong>
+      </div>
+    </div>
+
+    <button class="sheet__close sheet__close--primary" type="button" data-close>Fechar</button>
+  </div>
+</dialog>
 
 <!-- ===================== MENU ===================== -->
 <dialog class="sheet sheet--menu" id="dlgMenu">
@@ -210,7 +239,8 @@
       <li><kbd>G</kbd> jogador da vez ganha 1</li>
       <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> movem o contador na régua</li>
       <li><kbd>Espaço</kbd> encerrar turno</li>
-      <li><kbd>Z</kbd> desfazer &middot; <kbd>M</kbd> menu &middot; <kbd>N</kbd> novo jogo</li>
+      <li><kbd>Z</kbd> desfazer &middot; <kbd>M</kbd> menu &middot; <kbd>I</kbd> turno e memória</li>
+      <li><kbd>N</kbd> novo jogo</li>
     </ul>
 
     <p class="disclaimer">Projeto de fã, sem fins lucrativos e sem afiliação com a Bandai. Digimon e Digimon Card Game são marcas registradas de seus respectivos detentores.</p>
