@@ -71,8 +71,11 @@
           <span class="gauge__end gauge__end--a" id="endA">Jogador 1</span>
           <span class="gauge__end gauge__end--b" id="endB">Jogador 2</span>
         </div>
-        <div class="gauge__track" id="track" role="group" aria-label="Régua de memória">
-          <div class="puck" id="puck" aria-hidden="true"></div>
+        <!-- Janela de 10 casas: a tira desliza por baixo, e quem lê é o
+             marcador fixo no centro. -->
+        <div class="gauge__viewport" id="gaugeViewport" role="group" aria-label="Régua de memória">
+          <div class="gauge__strip" id="track"></div>
+          <span class="gauge__reader" aria-hidden="true"></span>
         </div>
       </div>
 

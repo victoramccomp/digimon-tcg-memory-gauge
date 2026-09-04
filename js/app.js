@@ -73,7 +73,7 @@
   function cacheDom() {
     el.body = document.body;
     el.track = $('track');
-    el.puck = $('puck');
+    el.gaugeViewport = $('gaugeViewport');
     el.turnName = $('turnName');
     el.turnMeta = $('turnMeta');
     el.toast = $('toast');
@@ -125,8 +125,14 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'cell' + (v === 0 ? ' cell--zero' : '');
-      b.textContent = String(Math.abs(v));
       b.dataset.v = String(v);
+
+      /* o número vai num span porque o hexágono é o ::before da casa,
+         e o texto precisa ficar por cima dele */
+      var n = document.createElement('span');
+      n.className = 'cell__n';
+      n.textContent = String(Math.abs(v));
+      b.appendChild(n);
       b.setAttribute('aria-label',
         v === 0 ? 'Colocar o contador no zero'
                 : 'Colocar o contador em ' + Math.abs(v) + ' de ' + (v < 0 ? 'A' : 'B'));
@@ -301,10 +307,13 @@
       c.classList.toggle('is-filled', filled);
       c.classList.toggle('side-a', filled && v < 0);
       c.classList.toggle('side-b', filled && v > 0);
+      c.classList.toggle('is-active', v === state.mem);
     }
 
-    el.puck.style.setProperty('--i', String(state.mem + MAX));
-    el.puck.className = 'puck' + (side ? ' side-' + side : '');
+    /* a tira desliza para pôr a casa atual no centro da janela */
+    el.track.style.setProperty('--i', String(state.mem + MAX));
+    el.gaugeViewport.classList.toggle('side-a', side === 'a');
+    el.gaugeViewport.classList.toggle('side-b', side === 'b');
 
     el.btnUndo.disabled = undoStack.length === 0;
     lastMem = state.mem;

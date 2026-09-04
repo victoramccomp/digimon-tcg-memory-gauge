@@ -8,7 +8,9 @@ fica girado 180°, e a régua de -10 a 10 no meio mostra de quem é o contador.
 
 ## Funcionalidades
 
-- **Régua de 21 casas** (10 de um lado, 0, 10 do outro) com contador animado.
+- **Régua de 21 casas** em hexágonos (10 de um lado, 0, 10 do outro), como um
+  mostrador: a janela mostra 10 casas e a tira desliza para deixar a memória
+  atual sempre no centro, sob um marcador fixo.
 - **Troca de turno automática** quando o contador cruza para o lado do oponente,
   entregando exatamente a memória empurrada — sem piso, então passar com 1 funciona.
 - **Encerrar o turno** com o contador em 0 ou do próprio lado entrega 3 ao oponente.
@@ -57,6 +59,32 @@ Os painéis têm base escura própria (`rgba(11,16,25,.66)`) para que o fundo
 passe por trás sem disputar contraste: no pico, uma luz chega ao conteúdo a
 0,22 de opacidade.
 
+## A régua
+
+Um mostrador, não uma barra: a janela mostra 10 casas das 21 e a tira desliza
+para pôr a memória atual sempre no centro, com um marcador fixo lendo a
+posição. Quem se move é a régua.
+
+- A tira tem **210% da janela**, então cada uma das 21 casas mede 210%/21 = 10%
+  da janela — 10 casas à vista. Não pode haver `gap` entre as casas, senão a
+  conta quebra; o respiro entre hexágonos vem do recuo do `::before`.
+- O deslocamento é `translateX(calc((4.5 - var(--i)) * 100% / 21))`, onde `--i`
+  é o índice da casa atual. Medido: a casa ativa fica a menos de 0,1px do
+  centro em toda a faixa.
+- A janela usa `overflow: clip`, não `hidden`: `clip` não cria área rolável,
+  então dar foco numa casa fora da janela não desloca a tira e não desalinha
+  o mostrador.
+- A altura acompanha a largura da casa (`aspect-ratio`), senão numa tela
+  estreita o hexágono sai mais alto que largo e perde a forma. Em paisagem a
+  altura é fixada de novo — altura explícita vence `aspect-ratio`.
+- `clip-path` corta `box-shadow`, então o brilho da casa ativa vem de
+  `drop-shadow`, que acompanha o recorte.
+
+**Consequência**: só as casas visíveis (±5 em volta da atual) podem ser tocadas
+para ajuste manual. Para saltos maiores, dois toques resolvem — cada toque
+recentra a régua e revela mais 5 casas do lado. Nos extremos (±10) a tira chega
+ao fim e metade da janela fica vazia, que é o mostrador no batente.
+
 ## Layout em paisagem no celular
 
 Otimizado para o Galaxy S20 FE deitado (915×412 CSS), que é a posição natural
@@ -78,7 +106,7 @@ com o aparelho na mesa entre os jogadores:
 - Os Ajustes abrem em duas colunas, para caber sem rolagem.
 
 Alvos de toque na horizontal: teclado de custo 49px, botões redondos 50px,
-casas da régua 43×62px, e 35px nos três botões da coluna — menores porque são
+casas da régua 71×62px, e 35px nos três botões da coluna — menores porque são
 controles secundários, fora do fluxo da partida.
 
 ## Atalhos de teclado
