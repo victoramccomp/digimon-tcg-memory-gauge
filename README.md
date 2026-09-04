@@ -21,6 +21,9 @@ fica girado 180°, e a régua de -10 a 10 no meio mostra de quem é o contador.
 - **Dois lados sempre ativos**, porque efeitos de *Counter* custam memória
   durante o turno do oponente.
 - **Toque direto na régua** para corrigir a posição manualmente.
+- **Sorteio de quem começa** num digivice, com duas luzes girando 5 segundos
+  em velocidade crescente até parar na cor do vencedor. Cara ou coroa honesto,
+  50/50.
 - **Desfazer** com histórico de até 80 jogadas.
 - **Nomes editáveis**, vibração na troca de turno e opção de manter a tela ligada.
 - **Estado salvo no aparelho** — fechar e reabrir não perde a partida.
@@ -61,6 +64,32 @@ px/s, cada luz ocupando cerca de 10–28% do traço em que corre.
 Os painéis têm base escura própria (`rgba(11,16,25,.66)`) para que o fundo
 passe por trás sem disputar contraste: no pico, uma luz chega ao conteúdo a
 0,22 de opacidade.
+
+## O sorteio de quem começa
+
+"Novo jogo" abre o digivice com duas luzes — a azul do Jogador 1 e a laranja do
+Jogador 2 — girando por 5 segundos em velocidade crescente. No fim o digivice
+assume a cor de quem começa.
+
+- **O lado sai antes da animação**, de `Math.random() < 0.5`. O giro só encena
+  o resultado; não há nada na animação que possa enviesar o sorteio. Verificado
+  com 400 sorteios: 191/209.
+- As duas luzes ficam a **180° uma da outra**, então parar em 10 voltas cheias
+  deixa a azul no marcador do topo e 10 voltas e meia deixa a laranja. O giro
+  aterrissa de verdade no resultado, em vez de parar em qualquer lugar e trocar
+  a cor.
+- A aceleração vem do `cubic-bezier(.55, 0, .8, .55)`, que é lento no começo e
+  rápido no fim.
+- O digivice é [`digivice.svg`](digivice.svg) usado como **máscara CSS**, não
+  como imagem: assim a cor dele é só o `background` da caixa e vira a cor do
+  vencedor com uma transição. O SVG é traçado em linha, com `fill` preto —
+  como imagem ele sumiria no fundo escuro.
+- As medidas do círculo saíram de sondagem do próprio desenho, não de chute:
+  centro em 49,29% / 49,17% e raio 24,9% da largura. As luzes orbitam em
+  20,5%, na faixa livre entre os detalhes internos (17,7%) e o anel.
+- Fechar o sorteio antes do fim **cancela**: o jogo novo não começa.
+- Com `prefers-reduced-motion` o giro é pulado e o resultado aparece direto.
+- "Escolher manualmente" continua disponível, para quem já decidiu na mesa.
 
 ## A régua
 
@@ -140,7 +169,8 @@ controles secundários, fora do fluxo da partida.
 DigimonMemoryGauge/
 ├── index.html              # marcação e diálogos
 ├── css/styles.css          # tema escuro, layout de mesa, régua
-├── js/app.js               # estado, regras de memória, render
+├── js/app.js               # estado, regras de memória, render, sorteio
+├── digivice.svg            # traçado do digivice, usado como máscara CSS
 ├── sw.js                   # service worker (offline)
 ├── manifest.webmanifest    # instalação como app
 ├── icons/icon.svg

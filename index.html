@@ -146,6 +146,27 @@
   </div>
 </dialog>
 
+<!-- ===================== SORTEIO ===================== -->
+<dialog class="sheet sheet--draw" id="dlgDraw">
+  <div class="sheet__in">
+    <h2 class="sheet__title" id="drawTitle">Sorteando quem começa</h2>
+
+    <div class="draw" id="draw">
+      <span class="draw__marker" aria-hidden="true"></span>
+      <div class="draw__disc" id="drawDisc" aria-hidden="true">
+        <span class="draw__light draw__light--a"></span>
+        <span class="draw__light draw__light--b"></span>
+      </div>
+      <div class="draw__device" aria-hidden="true"></div>
+    </div>
+
+    <p class="draw__status" id="drawStatus" role="status" aria-live="polite">Girando&hellip;</p>
+
+    <button class="sheet__close" type="button" data-close>Fechar</button>
+    <button class="draw__manual" type="button" data-act="new-manual">Escolher manualmente</button>
+  </div>
+</dialog>
+
 <!-- ===================== NOVO JOGO ===================== -->
 <dialog class="sheet" id="dlgNew">
   <div class="sheet__in">

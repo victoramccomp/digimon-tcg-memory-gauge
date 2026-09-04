@@ -94,6 +94,11 @@
       b: document.querySelector('.player--b .endturn')
     };
     el.dlgMenu = $('dlgMenu');
+    el.dlgDraw = $('dlgDraw');
+    el.draw = $('draw');
+    el.drawDisc = $('drawDisc');
+    el.drawTitle = $('drawTitle');
+    el.drawStatus = $('drawStatus');
     el.dlgInfo = $('dlgInfo');
     el.info = {
       turnNo: $('infoTurnNo'),
@@ -251,6 +256,61 @@
     persist();
     render();
     toast(nameOf(first) + ' começa a partida com a memória em 0');
+  }
+
+  /* ---------------------------------------------------------
+     Sorteio de quem começa
+     -----------------------------------------------------------
+     Cara ou coroa: o lado sai de Math.random() ANTES da animação,
+     e o giro só encena o resultado. As duas luzes ficam a 180°
+     uma da outra, então parar em N voltas cheias deixa a azul no
+     marcador, e N voltas + meia deixa a laranja.
+     --------------------------------------------------------- */
+
+  var SPIN_MS = 5000;
+  var VOLTAS = 10;
+  var drawTimers = [];
+
+  function clearDrawTimers() {
+    drawTimers.forEach(clearTimeout);
+    drawTimers = [];
+  }
+
+  function semMovimento() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function drawFirstPlayer() {
+    var winner = Math.random() < 0.5 ? 'a' : 'b';
+    var rapido = semMovimento();
+    var giro = rapido ? 0 : SPIN_MS;
+
+    clearDrawTimers();
+    el.draw.classList.remove('is-spinning', 'is-done', 'side-a', 'side-b');
+    el.drawTitle.textContent = 'Sorteando quem começa';
+    el.drawStatus.textContent = rapido ? 'Sorteando…' : 'Girando…';
+
+    /* reinicia a animação: sem isso o segundo sorteio não roda de novo */
+    void el.drawDisc.offsetWidth;
+    el.drawDisc.style.setProperty('--turns', (VOLTAS * 360 + (winner === 'b' ? 180 : 0)) + 'deg');
+    if (!rapido) el.draw.classList.add('is-spinning');
+
+    openDialog(el.dlgDraw);
+
+    drawTimers.push(setTimeout(function () {
+      el.draw.classList.add('is-done', 'side-' + winner);
+      el.drawTitle.textContent = 'Começa ' + nameOf(winner);
+      el.drawStatus.textContent = nameOf(winner) + ' abre a partida com a memória em 0';
+      if (settings.vibrate && navigator.vibrate) {
+        try { navigator.vibrate([30, 60, 30]); } catch (e) { /* sem suporte */ }
+      }
+      newGame(winner);
+    }, giro));
+
+    /* deixa o resultado na tela um instante antes de sair */
+    drawTimers.push(setTimeout(function () {
+      if (el.dlgDraw.open) el.dlgDraw.close();
+    }, giro + 1900));
   }
 
   /* ---------------------------------------------------------
@@ -421,7 +481,11 @@
         case 'undo': undo(); break;
         case 'menu': openDialog(el.dlgMenu); break;
         case 'info': openDialog(el.dlgInfo); break;
-        case 'new':  openDialog(el.dlgNew); break;
+        case 'new':  drawFirstPlayer(); break;
+        case 'new-manual':
+          el.dlgDraw.close();
+          openDialog(el.dlgNew);
+          break;
         case 'help': openDialog(el.dlgHelp); break;
         case 'settings': openDialog(el.dlgSettings); break;
         case 'rename':
@@ -442,6 +506,10 @@
     document.querySelectorAll('[data-close]').forEach(function (b) {
       b.addEventListener('click', function () { b.closest('dialog').close(); });
     });
+
+    /* Fechar o sorteio antes da hora cancela: o jogo novo não começa.
+       Vale também para o Esc, que fecha o diálogo por fora do botão. */
+    el.dlgDraw.addEventListener('close', clearDrawTimers);
 
     // escolha do jogador inicial
     ['a', 'b'].forEach(function (p) {
@@ -501,7 +569,7 @@
         case 'z': undo(); ev.preventDefault(); break;
         case 'm': openDialog(el.dlgMenu); ev.preventDefault(); break;
         case 'i': openDialog(el.dlgInfo); ev.preventDefault(); break;
-        case 'n': openDialog(el.dlgNew); ev.preventDefault(); break;
+        case 'n': drawFirstPlayer(); ev.preventDefault(); break;
         case '?': openDialog(el.dlgHelp); ev.preventDefault(); break;
       }
     });

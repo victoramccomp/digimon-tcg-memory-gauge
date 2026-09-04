@@ -684,6 +684,128 @@ body.rotate-opponent .player--b .player__inner{ transform: rotate(180deg); }
 .choice__btn--b{ color: var(--b); }
 .choice__btn--b:hover{ background: color-mix(in srgb, var(--b) 18%, transparent); border-color: var(--b); }
 
+/* =========================================================
+   Sorteio de quem começa
+   ---------------------------------------------------------
+   O digivice é o SVG usado como máscara, então a cor dele é só
+   o background da caixa — dá para virar a cor do vencedor com
+   uma transição.
+
+   As medidas do círculo saíram de sondagem do próprio desenho:
+   centro em 49,29% / 49,17% e raio 24,9% da largura. As luzes
+   orbitam em 20,5%, na faixa livre entre os detalhes internos
+   (17,7%) e o anel.
+   ========================================================= */
+
+.draw{
+  position: relative;
+  width: min(240px, 46vh, 62vw);
+  aspect-ratio: 1;
+  margin: 2px auto;
+  --dv: var(--muted);
+}
+.draw.side-a{ --dv: var(--a); }
+.draw.side-b{ --dv: var(--b); }
+
+.draw__device{
+  position: absolute;
+  inset: 0;
+  background: var(--dv);
+  transition: background .45s;
+  -webkit-mask-image: url(../digivice.svg);
+          mask-image: url(../digivice.svg);
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+}
+.draw.is-done .draw__device{ animation: draw-flash .55s ease-out; }
+
+@keyframes draw-flash{
+  0%  { filter: brightness(2.6) drop-shadow(0 0 18px var(--dv)); }
+  100%{ filter: none; }
+}
+
+/* disco das luzes: diâmetro = 2 × 20,5% do quadro */
+.draw__disc{
+  position: absolute;
+  left: 49.29%;
+  top: 49.17%;
+  width: 41%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+.draw.is-spinning .draw__disc{
+  animation: draw-spin 5s cubic-bezier(.55, 0, .8, .55) forwards;
+}
+
+/* acelera do começo ao fim e para no ângulo do vencedor */
+@keyframes draw-spin{
+  from{ transform: translate(-50%, -50%) rotate(0deg); }
+  to  { transform: translate(-50%, -50%) rotate(var(--turns, 3600deg)); }
+}
+
+.draw__light{
+  position: absolute;
+  left: 50%;
+  width: 15%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transition: opacity .4s;
+}
+.draw__light--a{
+  top: 0;
+  transform: translate(-50%, -50%);
+  background: var(--a);
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--a) 75%, transparent);
+}
+.draw__light--b{
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  background: var(--b);
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--b) 75%, transparent);
+}
+/* no fim só a luz do vencedor fica */
+.draw.is-done.side-a .draw__light--b,
+.draw.is-done.side-b .draw__light--a{ opacity: 0; }
+
+/* marca fixa no topo da órbita: é ela que "lê" o resultado */
+.draw__marker{
+  position: absolute;
+  left: 49.29%;
+  top: calc(49.17% - 20.5%);
+  width: 0;
+  height: 0;
+  margin-left: -6px;
+  margin-top: -13px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--dv);
+  transition: border-top-color .45s;
+}
+
+.draw__status{
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 2.6em;
+}
+.draw.is-done + .draw__status{ color: var(--text); }
+
+.draw__manual{
+  border: 0;
+  background: none;
+  padding: 4px;
+  font-size: 12px;
+  color: var(--faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.draw__manual:hover{ color: var(--muted); }
+
 /* diálogo de informação: turno e memória disponível */
 .info{ display: grid; gap: 8px; }
 .info__row{
@@ -893,6 +1015,11 @@ kbd{
   .opt small{ font-size: 11px; }
   .field__in{ padding: 8px 11px; font-size: 14px; }
   .sheet__close{ padding: 10px; font-size: 13px; }
+
+  /* o sorteio é o diálogo mais alto: encolhe para não virar rolagem */
+  #dlgDraw .sheet__in{ padding: 10px 14px; gap: 6px; }
+  .draw{ width: min(190px, 36vh, 38vw); margin: 0 auto; }
+  .draw__status{ font-size: 11.5px; min-height: 2.2em; }
 
   /* ajustes em duas colunas: sobra largura e falta altura */
   #dlgSettings{ width: min(96vw, 660px); }

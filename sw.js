@@ -1,6 +1,6 @@
 /* Service worker — cache do app shell para uso offline na mesa de jogo. */
 
-var CACHE = 'memory-gauge-v2';
+var CACHE = 'memory-gauge-v3';
 
 var SHELL = [
   './',
@@ -9,7 +9,8 @@ var SHELL = [
   './js/app.js',
   './js/circuit.js',
   './manifest.webmanifest',
-  './icons/icon.svg'
+  './icons/icon.svg',
+  './digivice.svg'
 ];
 
 self.addEventListener('install', function (ev) {
